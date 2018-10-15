@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalByteBufferUtils;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
@@ -322,13 +323,10 @@ public class DynamoDBEncryptorTest {
     }
 
     private void assertToByteArray(final String msg, final byte[] expected, final ByteBuffer testValue) throws ReflectiveOperationException {
-        Method m = DynamoDBEncryptor.class.getDeclaredMethod("toByteArray", ByteBuffer.class);
-        m.setAccessible(true);
-
         int oldPosition = testValue.position();
         int oldLimit = testValue.limit();
 
-        assertArrayEquals(msg + ":Array", expected, (byte[]) m.invoke(null, testValue));
+        assertArrayEquals(msg + ":Array", expected, InternalByteBufferUtils.toByteArray(testValue));
         assertEquals(msg + ":Position", oldPosition, testValue.position());
         assertEquals(msg + ":Limit", oldLimit, testValue.limit());
     }
