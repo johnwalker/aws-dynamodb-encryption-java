@@ -18,6 +18,8 @@ public class InternalAttributeValueTranslatorTest {
     // TODO: wow, so lazy.
     @Test
     public void testTripFromInternalToSdk1AttributeValue() {
+        InternalAttributeValueTranslatorSdk1 translatorSdk1 = new InternalAttributeValueTranslatorSdk1();
+
         Boolean aBoolean = Boolean.TRUE;
         String aString = "S";
         String aString2 = "S2";
@@ -41,7 +43,7 @@ public class InternalAttributeValueTranslatorTest {
         internalAttributeValue.setM(m);
         internalAttributeValue.setL(l);
 
-        AttributeValue attributeValue = InternalAttributeValueTranslator.convertFrom(internalAttributeValue);
+        AttributeValue attributeValue = translatorSdk1.convertFrom(internalAttributeValue);
 
         assertEquals(aBoolean, attributeValue.getBOOL());
         assertEquals(aString, attributeValue.getS());
@@ -55,6 +57,8 @@ public class InternalAttributeValueTranslatorTest {
 
     @Test
     public void testTripFromSdk1ToInternalAttributeValue() {
+        InternalAttributeValueTranslatorSdk1 translatorSdk1 = new InternalAttributeValueTranslatorSdk1();
+
         Boolean aBoolean = Boolean.TRUE;
         String aString = "S";
         String aString2 = "S2";
@@ -78,7 +82,7 @@ public class InternalAttributeValueTranslatorTest {
         attributeValue.setM(m);
         attributeValue.setL(l);
 
-        InternalAttributeValue internalAttributeValue = InternalAttributeValueTranslator.convertFrom(attributeValue);
+        InternalAttributeValue internalAttributeValue = translatorSdk1.convertFrom(attributeValue);
 
         assertEquals(aBoolean, internalAttributeValue.getBOOL());
         assertEquals(aString, internalAttributeValue.getS());

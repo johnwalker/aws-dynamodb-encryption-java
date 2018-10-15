@@ -19,12 +19,14 @@ import java.nio.ByteBuffer;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslator;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValue;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueMarshaller;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk1;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 /**
  * @author Greg Rubin 
  */
 public class AttributeValueMarshaller {
+    static InternalAttributeValueTranslatorSdk1 translatorSdk1 = new InternalAttributeValueTranslatorSdk1();
 
     private AttributeValueMarshaller() {
         // Prevent instantiation
@@ -55,7 +57,7 @@ public class AttributeValueMarshaller {
      * @see java.io.DataInput
      */
     public static ByteBuffer marshall(final AttributeValue attributeValue) {
-        InternalAttributeValue internalAttributeValue = InternalAttributeValueTranslator.convertFrom(attributeValue);
+        InternalAttributeValue internalAttributeValue = translatorSdk1.convertFrom(attributeValue);
         return InternalAttributeValueMarshaller.marshall(internalAttributeValue);
     }
 
@@ -64,7 +66,7 @@ public class AttributeValueMarshaller {
      */
     public static AttributeValue unmarshall(final ByteBuffer plainText) {
         InternalAttributeValue internalAttributeValue = InternalAttributeValueMarshaller.unmarshall(plainText);
-        return InternalAttributeValueTranslator.convertFrom(internalAttributeValue);
+        return translatorSdk1.convertFrom(internalAttributeValue);
     }
 
 }

@@ -1,8 +1,10 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslator;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-public class DynamoDBEncryptor extends GenericDynamoDBEncryptor {
+public class DynamoDBEncryptor extends GenericDynamoDBEncryptor<AttributeValue, InternalAttributeValueTranslator<AttributeValue>> {
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
         super(provider, descriptionBase);
     }

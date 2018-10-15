@@ -39,6 +39,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslator;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalByteBufferUtils;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
@@ -54,7 +55,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
  * 
  * @author Greg Rubin 
  */
-public class GenericDynamoDBEncryptor {
+public class GenericDynamoDBEncryptor<T, U extends InternalAttributeValueTranslator<T>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
     private static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
