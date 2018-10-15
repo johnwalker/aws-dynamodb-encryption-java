@@ -1,10 +1,7 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InternalAttributeValue {
     private String s;
@@ -126,7 +123,6 @@ public class InternalAttributeValue {
         return this.bOOL;
     }
 
-
     public Boolean isBOOL() {
         return this.bOOL;
     }
@@ -176,5 +172,27 @@ public class InternalAttributeValue {
 
         sb.append("}");
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InternalAttributeValue that = (InternalAttributeValue) o;
+        return Objects.equals(s, that.s) &&
+                Objects.equals(n, that.n) &&
+                Objects.equals(b, that.b) &&
+                Objects.equals(sS, that.sS) &&
+                Objects.equals(nS, that.nS) &&
+                Objects.equals(bS, that.bS) &&
+                Objects.equals(m, that.m) &&
+                Objects.equals(l, that.l) &&
+                Objects.equals(nULLValue, that.nULLValue) &&
+                Objects.equals(bOOL, that.bOOL);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(s, n, b, sS, nS, bS, m, l, nULLValue, bOOL);
     }
 }

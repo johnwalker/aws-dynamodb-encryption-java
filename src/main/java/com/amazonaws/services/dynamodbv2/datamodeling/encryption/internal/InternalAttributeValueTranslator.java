@@ -4,7 +4,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import java.util.*;
 
-public class InternalAttributeTranslator
+public class InternalAttributeValueTranslator
 {
     public static InternalAttributeValue convertFrom(AttributeValue attributeValue) {
         if (attributeValue == null) {
