@@ -2,13 +2,13 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-public class EncryptionContextSDK2 extends GenericEncryptionContext<AttributeValue> {
+public class EncryptionContextSDK2 extends GenericEncryptionContext<AttributeValue, EncryptionContextSDK2.Builder> {
 
     EncryptionContextSDK2(Builder encryptionContextBuilder) {
         super(encryptionContextBuilder);
     }
 
-    public static class Builder extends GenericEncryptionContext.Builder<AttributeValue, Builder> {
+    public static class Builder extends GenericEncryptionContext.Builder<AttributeValue, EncryptionContextSDK2, Builder> {
         public Builder() {
         }
 

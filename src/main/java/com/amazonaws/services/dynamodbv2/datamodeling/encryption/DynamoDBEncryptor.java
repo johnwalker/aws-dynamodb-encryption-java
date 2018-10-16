@@ -6,9 +6,9 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import java.util.function.Supplier;
 
-public class DynamoDBEncryptor extends GenericDynamoDBEncryptor<AttributeValue> {
+public class DynamoDBEncryptor extends GenericDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder> {
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
-        super(provider, descriptionBase, () -> new EncryptionContext.Builder());
+        super(provider, descriptionBase, (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext));
     }
 
     public static DynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase) {

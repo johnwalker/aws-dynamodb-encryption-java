@@ -56,7 +56,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
  * 
  * @author Greg Rubin 
  */
-public abstract class GenericDynamoDBEncryptor<T> {
+public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionContext<T, V>,
+        V extends GenericEncryptionContext.Builder<T, U, V>> {
     // TODO: Changing these to protected is a disaster waiting to happen. We'll come back to these soon
     protected static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     protected static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
@@ -75,7 +76,7 @@ public abstract class GenericDynamoDBEncryptor<T> {
     };
 
     protected static final int CURRENT_VERSION = 0;
-    private final Supplier<GenericEncryptionContext.Builder<T>> encryptionContextBuilderSupplier;
+    private final Function<U, V> encryptionContextBuilderSupplier;
 
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
@@ -88,8 +89,8 @@ public abstract class GenericDynamoDBEncryptor<T> {
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
     
     protected GenericDynamoDBEncryptor(EncryptionMaterialsProvider provider,
-                             String descriptionBase,
-                             Supplier<GenericEncryptionContext.Builder<T>> encryptionContextBuilderSupplier) {
+                                       String descriptionBase,
+                                       Function<U, V> encryptionContextBuilderSupplier) {
         this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
@@ -98,9 +99,10 @@ public abstract class GenericDynamoDBEncryptor<T> {
 
     }
 
-    abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase);
-
-    abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider);
+    // TODO: How do i require subclasses to make their own ..??
+    // ... do I need to?
+    // abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase);
+    // abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider);
 
     /**
      * Returns a decrypted version of the provided DynamoDb record. The signature is verified across
@@ -237,7 +239,7 @@ public abstract class GenericDynamoDBEncryptor<T> {
     public Map<String, T> decryptRecord(
             Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
-            V context) throws GeneralSecurityException {
+            U context) throws GeneralSecurityException {
         if (attributeFlags.isEmpty()) {
             return itemAttributes;
         }
@@ -254,8 +256,7 @@ public abstract class GenericDynamoDBEncryptor<T> {
             materialDescription = unmarshallDescription(itemAttributes.get(materialDescriptionFieldName));
         }
         // Copy the material description and attribute values into the context
-        // TODO: AHHHH!!!!!
-        context = new EncryptionContext.Builder(context)
+        context = encryptionContextBuilderSupplier.apply(context)
             .withMaterialDescription(materialDescription)
             .withAttributeValues(itemAttributes)
             .build();
@@ -300,7 +301,7 @@ public abstract class GenericDynamoDBEncryptor<T> {
      *             if failed to encrypt the record
      */
     public Map<String, T> encryptRecord(
-            Map<String, AttributeValue> itemAttributes,
+            Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             V context) throws GeneralSecurityException {
         if (attributeFlags.isEmpty()) {

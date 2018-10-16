@@ -14,6 +14,7 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
+import java.security.KeyStore;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,13 +43,13 @@ import com.amazonaws.services.s3.model.Encryption;
  * 
  * @author Greg Rubin 
  */
-public final class EncryptionContext extends GenericEncryptionContext<AttributeValue> {
+public final class EncryptionContext extends GenericEncryptionContext<AttributeValue, EncryptionContext.Builder> {
 
     EncryptionContext(Builder encryptionContextBuilder) {
         super(encryptionContextBuilder);
     }
 
-    public static class Builder extends GenericEncryptionContext.Builder<AttributeValue, Builder> {
+    public static class Builder extends GenericEncryptionContext.Builder<AttributeValue, EncryptionContext, Builder> {
         public Builder() {
         }
 

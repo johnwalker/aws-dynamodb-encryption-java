@@ -10,7 +10,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.Encry
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-public class GenericEncryptionContext<T> {
+public class GenericEncryptionContext<T, X extends GenericEncryptionContext.Builder<T, ?, ?>> {
     private final String tableName;
     private final Map<String, T> attributeValues;
     private final Class<?> modeledClass;
@@ -19,9 +19,9 @@ public class GenericEncryptionContext<T> {
     private final String rangeKeyName;
     private final Map<String, String> materialDescription;
 
-    GenericEncryptionContext(Builder builder) {
+     GenericEncryptionContext(X builder) {
         tableName = builder.getTableName();
-        attributeValues = builder.getAttributeValues();
+        attributeValues = (Map<String, T>) builder.getAttributeValues();
         modeledClass = builder.getModeledClass();
         developerContext = builder.getDeveloperContext();
         hashKeyName = builder.getHashKeyName();
@@ -85,7 +85,9 @@ public class GenericEncryptionContext<T> {
      *
      * This class is <em>not</em> thread-safe.
      */
-    public static class Builder<U, V extends Builder<U, V>> {
+    public static abstract class Builder<U,
+            Q extends GenericEncryptionContext<U, V>,
+            V extends Builder<U, Q, V>> {
         private String tableName = null;
         private Map<String, U> attributeValues = null;
         private Class<?> modeledClass = null;
@@ -104,7 +106,7 @@ public class GenericEncryptionContext<T> {
          * Copy constructor.
          * This will perform a shallow copy of the <code>DeveloperContext</code>.
          */
-        public Builder(GenericEncryptionContext<U> context) {
+        public Builder(Q context) {
             tableName = context.getTableName();
             attributeValues = context.getAttributeValues();
             modeledClass = context.getModeledClass();
@@ -114,9 +116,7 @@ public class GenericEncryptionContext<T> {
             materialDescription = context.getMaterialDescription();
         }
 
-        public GenericEncryptionContext build() {
-            return new GenericEncryptionContext(this);
-        }
+        abstract Q build();
 
         public V withTableName(String tableName) {
             this.tableName = tableName;
