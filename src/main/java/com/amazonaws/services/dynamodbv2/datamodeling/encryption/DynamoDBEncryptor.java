@@ -8,7 +8,8 @@ import java.util.function.Supplier;
 
 public class DynamoDBEncryptor extends GenericDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder> {
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
-        super(provider, descriptionBase, (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext));
+        super(provider, descriptionBase, (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext),
+                () -> new AttributeValue());
     }
 
     public static DynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase) {

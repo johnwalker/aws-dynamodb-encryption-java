@@ -45,6 +45,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.GenericEncryptionMaterialsProvider;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.AttributeValueMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.ByteBufferInputStream;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
@@ -77,32 +78,32 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
 
     protected static final int CURRENT_VERSION = 0;
     private final Function<U, V> encryptionContextBuilderSupplier;
+    private final Supplier<T> attributeSupplier;
 
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
     
-    private EncryptionMaterialsProvider encryptionMaterialsProvider;
+    private GenericEncryptionMaterialsProvider<U> encryptionMaterialsProvider;
     private final String descriptionBase;
+    private final InternalAttributeValueTranslator<T> internalAttributeValueTranslator;
     private final String symmetricEncryptionModeHeader;
     private final String signingAlgorithmHeader;
     
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
     
-    protected GenericDynamoDBEncryptor(EncryptionMaterialsProvider provider,
+    protected GenericDynamoDBEncryptor(GenericEncryptionMaterialsProvider<U> provider,
                                        String descriptionBase,
-                                       Function<U, V> encryptionContextBuilderSupplier) {
+                                       Function<U, V> encryptionContextBuilderSupplier,
+                                       Supplier<T> attributeSupplier,
+                                       InternalAttributeValueTranslator<T> internalAttributeValueTranslator) {
         this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
+        this.internalAttributeValueTranslator = internalAttributeValueTranslator;
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         this.encryptionContextBuilderSupplier = encryptionContextBuilderSupplier;
-
+        this.attributeSupplier = attributeSupplier;
     }
-
-    // TODO: How do i require subclasses to make their own ..??
-    // ... do I need to?
-    // abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase);
-    // abstract GenericDynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider);
 
     /**
      * Returns a decrypted version of the provided DynamoDb record. The signature is verified across
@@ -123,7 +124,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      * @throws GeneralSecurityException
      */
     public Map<String, T> decryptAllFieldsExcept(Map<String, T> itemAttributes,
-            V context, String... doNotDecrypt) throws GeneralSecurityException {
+            U context, String... doNotDecrypt) throws GeneralSecurityException {
         return decryptAllFieldsExcept(itemAttributes, context, Arrays.asList(doNotDecrypt));
     }
     
@@ -132,7 +133,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      */
     public Map<String, T> decryptAllFieldsExcept(
             Map<String, T> itemAttributes,
-            V context, Collection<String> doNotDecrypt)
+            U context, Collection<String> doNotDecrypt)
             throws GeneralSecurityException {
         Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
                 itemAttributes, doNotDecrypt);
@@ -187,14 +188,14 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      * @throws GeneralSecurityException
      */
     public Map<String, T> encryptAllFieldsExcept(Map<String, T> itemAttributes,
-            V context, String... doNotEncrypt) throws GeneralSecurityException {
+            U context, String... doNotEncrypt) throws GeneralSecurityException {
         
         return encryptAllFieldsExcept(itemAttributes, context, Arrays.asList(doNotEncrypt));
     }
     
     public Map<String, T> encryptAllFieldsExcept(
             Map<String, T> itemAttributes,
-            V context,
+            U context,
             Collection<String> doNotEncrypt)
             throws GeneralSecurityException {
         Map<String, Set<EncryptionFlags>> attributeFlags = allEncryptionFlagsExcept(
@@ -303,7 +304,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
     public Map<String, T> encryptRecord(
             Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
-            V context) throws GeneralSecurityException {
+            U context) throws GeneralSecurityException {
         if (attributeFlags.isEmpty()) {
             return itemAttributes;
         }
@@ -311,7 +312,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         itemAttributes = new HashMap<String, T>(itemAttributes);
 
         // Copy the attribute values into the context
-        context = new EncryptionContext.Builder(context)
+        context = encryptionContextBuilderSupplier.apply(context)
             .withAttributeValues(itemAttributes)
             .build();
         
@@ -397,7 +398,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      * (which are always in the form of ByteBuffer) as per the corresponding
      * attribute flags.
      */
-    private void actualEncryption(Map<String, AttributeValue> itemAttributes,
+    private void actualEncryption(Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             Map<String, String> materialDescription,
             SecretKey encryptionKey) throws GeneralSecurityException {
