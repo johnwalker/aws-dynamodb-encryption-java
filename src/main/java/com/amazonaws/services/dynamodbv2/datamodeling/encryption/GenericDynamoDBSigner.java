@@ -14,9 +14,9 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.AttributeValueMarshaller;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValue;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -77,8 +77,8 @@ class GenericDynamoDBSigner {
         hmacComparisonKey = new SecretKeySpec(tmpKey, "HmacSHA256");
     }
 
-    void verifySignature(Map<String, AttributeValue> itemAttributes, Map<String, Set<EncryptionFlags>> attributeFlags,
-            byte[] associatedData, Key verificationKey, ByteBuffer signature) throws GeneralSecurityException {
+    void verifySignature(Map<String, InternalAttributeValue> itemAttributes, Map<String, Set<EncryptionFlags>> attributeFlags,
+                         byte[] associatedData, Key verificationKey, ByteBuffer signature) throws GeneralSecurityException {
         if (verificationKey instanceof DelegatedKey) {
             DelegatedKey dKey = (DelegatedKey)verificationKey;
             byte[] stringToSign = calculateStringToSign(itemAttributes, attributeFlags, associatedData);
@@ -104,7 +104,7 @@ class GenericDynamoDBSigner {
         }
     }
 
-    static byte[] calculateStringToSign(Map<String, AttributeValue> itemAttributes,
+    static byte[] calculateStringToSign(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData)
             throws NoSuchAlgorithmException {
         try {
@@ -122,7 +122,7 @@ class GenericDynamoDBSigner {
             for (String name : attrNames) {
                 Set<EncryptionFlags> set = attributeFlags.get(name);
                 if(set != null && set.contains(EncryptionFlags.SIGN)) {
-                    AttributeValue tmp = itemAttributes.get(name);
+                    InternalAttributeValue tmp = itemAttributes.get(name);
                     out.write(sha256.digest(name.getBytes(UTF8)));
                     sha256.reset();
                     if (set.contains(EncryptionFlags.ENCRYPT)) {
@@ -134,7 +134,7 @@ class GenericDynamoDBSigner {
 
                     sha256.reset();
 
-                    sha256.update(AttributeValueMarshaller.marshall(tmp));
+                    sha256.update(InternalAttributeValueMarshaller.marshall(tmp));
                     out.write(sha256.digest());
                     sha256.reset();
                 }
@@ -151,7 +151,7 @@ class GenericDynamoDBSigner {
      * signing.
      */
     byte[] calculateSignature(
-            Map<String, AttributeValue> itemAttributes,
+            Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             byte[] associatedData, Key key) throws GeneralSecurityException {
         if (key instanceof DelegatedKey) {
@@ -165,14 +165,14 @@ class GenericDynamoDBSigner {
         }
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
             DelegatedKey key) throws GeneralSecurityException {
         byte[] stringToSign = calculateStringToSign(itemAttributes, attributeFlags, associatedData);
         return key.sign(stringToSign, key.getAlgorithm());
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
             SecretKey key) throws GeneralSecurityException {
         if (key instanceof DelegatedKey) {
@@ -185,7 +185,7 @@ class GenericDynamoDBSigner {
         return hmac.doFinal();
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
             PrivateKey key) throws GeneralSecurityException {
         byte[] stringToSign = calculateStringToSign(itemAttributes, attributeFlags, associatedData);
