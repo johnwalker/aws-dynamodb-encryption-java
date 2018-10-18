@@ -40,6 +40,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValue;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslator;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalByteBufferUtils;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
@@ -78,7 +80,6 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
 
     protected static final int CURRENT_VERSION = 0;
     private final Function<U, V> encryptionContextBuilderSupplier;
-    private final Supplier<T> attributeSupplier;
 
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
@@ -94,7 +95,6 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
     protected GenericDynamoDBEncryptor(GenericEncryptionMaterialsProvider<U> provider,
                                        String descriptionBase,
                                        Function<U, V> encryptionContextBuilderSupplier,
-                                       Supplier<T> attributeSupplier,
                                        InternalAttributeValueTranslator<T> internalAttributeValueTranslator) {
         this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
@@ -102,7 +102,6 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         this.encryptionContextBuilderSupplier = encryptionContextBuilderSupplier;
-        this.attributeSupplier = attributeSupplier;
     }
 
     /**
@@ -236,7 +235,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         }
         return attributeFlags;
     }
-    
+
     public Map<String, T> decryptRecord(
             Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
@@ -246,15 +245,16 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         }
         // Copy to avoid changing anyone elses objects
         itemAttributes = new HashMap<String, T>(itemAttributes);
-        
+
         Map<String, String> materialDescription = Collections.emptyMap();
         DecryptionMaterials materials;
         SecretKey decryptionKey;
 
-        DynamoDBSigner signer = DynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
+        GenericDynamoDBSigner signer = GenericDynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
+        Map<String, InternalAttributeValue> internalAttributeValueMap = internalAttributeValueTranslator.convertFrom(itemAttributes);
 
-        if (itemAttributes.containsKey(materialDescriptionFieldName)) {
-            materialDescription = unmarshallDescription(itemAttributes.get(materialDescriptionFieldName));
+        if (internalAttributeValueMap.containsKey(materialDescriptionFieldName)) {
+            materialDescription = unmarshallDescription(internalAttributeValueMap.get(materialDescriptionFieldName));
         }
         // Copy the material description and attribute values into the context
         context = encryptionContextBuilderSupplier.apply(context)
@@ -266,24 +266,24 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         decryptionKey = materials.getDecryptionKey();
         if (materialDescription.containsKey(signingAlgorithmHeader)) {
             String signingAlg = materialDescription.get(signingAlgorithmHeader);
-            signer = DynamoDBSigner.getInstance(signingAlg, Utils.getRng());
+            signer = GenericDynamoDBSigner.getInstance(signingAlg, Utils.getRng());
         }
         
         ByteBuffer signature;
-        if (!itemAttributes.containsKey(signatureFieldName) || itemAttributes.get(signatureFieldName).getB() == null) {
+        if (!internalAttributeValueMap.containsKey(signatureFieldName) || internalAttributeValueMap.get(signatureFieldName).getB() == null) {
             signature = ByteBuffer.allocate(0);
         } else {
-            signature = itemAttributes.get(signatureFieldName).getB().asReadOnlyBuffer();
+            signature = internalAttributeValueMap.get(signatureFieldName).getB().asReadOnlyBuffer();
         }
-        itemAttributes.remove(signatureFieldName);
+        internalAttributeValueMap.remove(signatureFieldName);
 
         String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
-        signer.verifySignature(itemAttributes, attributeFlags, associatedData.getBytes(UTF8),
+        signer.verifySignature(internalAttributeValueMap, attributeFlags, associatedData.getBytes(UTF8),
                 materials.getVerificationKey(), signature);
-        itemAttributes.remove(materialDescriptionFieldName);
+        internalAttributeValueMap.remove(materialDescriptionFieldName);
 
-        actualDecryption(itemAttributes, attributeFlags, decryptionKey, materialDescription);
-        return itemAttributes;
+        actualDecryption(internalAttributeValueMap, attributeFlags, decryptionKey, materialDescription);
+        return internalAttributeValueTranslator.convertFromInternal(internalAttributeValueMap);
     }
 
     /**
@@ -322,37 +322,39 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
                 materials.getMaterialDescription());
         SecretKey encryptionKey = materials.getEncryptionKey();
 
-        actualEncryption(itemAttributes, attributeFlags, materialDescription, encryptionKey);
+        Map<String, InternalAttributeValue> internalAttributeValueMap = internalAttributeValueTranslator.convertFrom(itemAttributes);
+        actualEncryption(internalAttributeValueMap, attributeFlags, materialDescription, encryptionKey);
 
         // The description must be stored after encryption because its data
         // is necessary for proper decryption.
         final String signingAlgo = materialDescription.get(signingAlgorithmHeader);
-        DynamoDBSigner signer;
+        GenericDynamoDBSigner signer;
         if (signingAlgo != null) {
-            signer = DynamoDBSigner.getInstance(signingAlgo, Utils.getRng());
+            signer = GenericDynamoDBSigner.getInstance(signingAlgo, Utils.getRng());
         } else {
-            signer = DynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
+            signer = GenericDynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
         }
 
         if (materials.getSigningKey() instanceof PrivateKey ) {
             materialDescription.put(signingAlgorithmHeader, signer.getSigningAlgorithm());
         }
         if (!materialDescription.isEmpty()) {
-            itemAttributes.put(materialDescriptionFieldName, marshallDescription(materialDescription));
+            InternalAttributeValue internalAttributeValue = marshallDescription(materialDescription);
+            internalAttributeValueMap.put(materialDescriptionFieldName, internalAttributeValue);
         }
 
         String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
-        byte[] signature = signer.calculateSignature(itemAttributes, attributeFlags,
+        byte[] signature = signer.calculateSignature(internalAttributeValueMap, attributeFlags,
                 associatedData.getBytes(UTF8), materials.getSigningKey());
 
-        AttributeValue signatureAttribute = new AttributeValue();
+        InternalAttributeValue signatureAttribute = new InternalAttributeValue();
         signatureAttribute.setB(ByteBuffer.wrap(signature));
-        itemAttributes.put(signatureFieldName, signatureAttribute);
+        internalAttributeValueMap.put(signatureFieldName, signatureAttribute);
 
-        return itemAttributes;
+        return internalAttributeValueTranslator.convertFromInternal(internalAttributeValueMap);
     }
     
-    private void actualDecryption(Map<String, T> itemAttributes,
+    private void actualDecryption(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags, SecretKey encryptionKey,
             Map<String, String> materialDescription) throws GeneralSecurityException {
         final String encryptionMode = encryptionKey != null ?  encryptionKey.getAlgorithm() +
@@ -360,7 +362,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         Cipher cipher = null;
         int blockSize = -1;
 
-        for (Map.Entry<String, T> entry: itemAttributes.entrySet()) {
+        for (Map.Entry<String, InternalAttributeValue> entry: itemAttributes.entrySet()) {
             Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
             if (flags != null && flags.contains(EncryptionFlags.ENCRYPT)) {
                 if (!flags.contains(EncryptionFlags.SIGN)) {
@@ -383,7 +385,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
                     cipher.doFinal(cipherText, plainText);
                     plainText.rewind();
                 }
-                entry.setValue(AttributeValueMarshaller.unmarshall(plainText));
+                entry.setValue(InternalAttributeValueMarshaller.unmarshall(plainText));
             }
         }
     }
@@ -398,7 +400,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      * (which are always in the form of ByteBuffer) as per the corresponding
      * attribute flags.
      */
-    private void actualEncryption(Map<String, T> itemAttributes,
+    private void actualEncryption(Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             Map<String, String> materialDescription,
             SecretKey encryptionKey) throws GeneralSecurityException {
@@ -411,13 +413,13 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
         Cipher cipher = null;
         int blockSize = -1;
 
-        for (Map.Entry<String, T> entry: itemAttributes.entrySet()) {
+        for (Map.Entry<String, InternalAttributeValue> entry: itemAttributes.entrySet()) {
             Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
             if (flags != null && flags.contains(EncryptionFlags.ENCRYPT)) {
                 if (!flags.contains(EncryptionFlags.SIGN)) {
                     throw new IllegalArgumentException("All encrypted fields must be signed. Bad field: " + entry.getKey());
                 }
-                ByteBuffer plainText = AttributeValueMarshaller.marshall(entry.getValue());
+                ByteBuffer plainText = InternalAttributeValueMarshaller.marshall(entry.getValue());
                 plainText.rewind();
                 ByteBuffer cipherText;
                 if (encryptionKey instanceof DelegatedKey) {
@@ -445,7 +447,9 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
                     cipherText.rewind();
                 }
                 // Replace the plaintext attribute value with the encrypted content
-                entry.setValue(new AttributeValue().withB(cipherText));
+                InternalAttributeValue internalAttributeValue = new InternalAttributeValue();
+                internalAttributeValue.setB(cipherText);
+                entry.setValue(internalAttributeValue);
             }
         }
     }
@@ -498,7 +502,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
      * @return the description encoded as an AttributeValue with a ByteBuffer value
      * @see java.io.DataOutput#writeUTF(String)
      */
-    protected static AttributeValue marshallDescription(Map<String, String> description) {
+    protected static InternalAttributeValue marshallDescription(Map<String, String> description) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(bos);
@@ -512,7 +516,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
                 out.write(bytes);
             }
             out.close();
-            AttributeValue result = new AttributeValue();
+            InternalAttributeValue result = new InternalAttributeValue();
             result.setB(ByteBuffer.wrap(bos.toByteArray()));
             return result;
         } catch (IOException ex) {
@@ -527,7 +531,7 @@ public abstract class GenericDynamoDBEncryptor<T, U extends GenericEncryptionCon
     /**
      * @see #marshallDescription(Map)
      */
-    protected static Map<String, String> unmarshallDescription(AttributeValue attributeValue) {
+    protected static Map<String, String> unmarshallDescription(InternalAttributeValue attributeValue) {
         attributeValue.getB().mark();
         try (DataInputStream in = new DataInputStream(
                     new ByteBufferInputStream(attributeValue.getB())) ) {
