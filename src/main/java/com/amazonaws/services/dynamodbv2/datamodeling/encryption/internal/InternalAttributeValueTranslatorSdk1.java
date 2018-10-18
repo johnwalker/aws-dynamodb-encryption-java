@@ -26,28 +26,6 @@ public class InternalAttributeValueTranslatorSdk1 implements InternalAttributeVa
         return internalAttributeValue;
     }
 
-    public Collection<InternalAttributeValue> convertFrom(Collection<AttributeValue> attributeValues) {
-        if (attributeValues == null) {
-            return null;
-        }
-        Collection<InternalAttributeValue> internalAttributeValues = new ArrayList<>();
-        for(AttributeValue attributeValue : attributeValues) {
-            internalAttributeValues.add(convertFrom(attributeValue));
-        }
-        return internalAttributeValues;
-    }
-
-    public Map<String, InternalAttributeValue> convertFrom(Map<String, AttributeValue> stringAttributeValueMap) {
-        if (stringAttributeValueMap == null) {
-            return null;
-        }
-        Map<String, InternalAttributeValue> internalAttributeValueMap = new HashMap<>();
-        for(Map.Entry<String, AttributeValue> entry : stringAttributeValueMap.entrySet()) {
-            internalAttributeValueMap.put(entry.getKey(), convertFrom(entry.getValue()));
-        }
-        return internalAttributeValueMap;
-    }
-
     public AttributeValue convertFrom(InternalAttributeValue internalAttributeValue) {
         if (internalAttributeValue == null) {
             return null;
@@ -64,27 +42,5 @@ public class InternalAttributeValueTranslatorSdk1 implements InternalAttributeVa
         attributeValue.setS(internalAttributeValue.getS());
         attributeValue.setSS(internalAttributeValue.getSS());
         return attributeValue;
-    }
-
-    public Collection<AttributeValue> convertFromInternal(Collection<InternalAttributeValue> internalAttributeValues) {
-        if (internalAttributeValues == null) {
-            return null;
-        }
-        Collection<AttributeValue> attributeValues = new ArrayList<>();
-        for(InternalAttributeValue internalAttributeValue : internalAttributeValues) {
-            attributeValues.add(convertFrom(internalAttributeValue));
-        }
-        return attributeValues;
-    }
-
-    public Map<String, AttributeValue> convertFromInternal(Map<String, InternalAttributeValue> stringInternalAttributeValueMap) {
-        if (stringInternalAttributeValueMap == null) {
-            return null;
-        }
-        Map<String, AttributeValue> stringAttributeValueMap = new HashMap<>();
-        for(Map.Entry<String, InternalAttributeValue> entry : stringInternalAttributeValueMap.entrySet()) {
-            stringAttributeValueMap.put(entry.getKey(), convertFrom(entry.getValue()));
-        }
-        return stringAttributeValueMap;
     }
 }
