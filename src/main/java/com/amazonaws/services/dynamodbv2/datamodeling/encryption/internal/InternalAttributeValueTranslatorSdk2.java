@@ -38,16 +38,23 @@ public class InternalAttributeValueTranslatorSdk2 implements InternalAttributeVa
         if (internalAttributeValue == null) {
             return null;
         }
-        List<SdkBytes> sdkBytes;
+        List<SdkBytes> sdkBytesList;
         if (internalAttributeValue.getBS() != null) {
-            sdkBytes = internalAttributeValue.getBS().stream().map(SdkBytes::fromByteBuffer).collect(Collectors.toList());
+            sdkBytesList = internalAttributeValue.getBS().stream().map(SdkBytes::fromByteBuffer).collect(Collectors.toList());
+        } else {
+            sdkBytesList = null;
+        }
+        SdkBytes sdkBytes;
+        ByteBuffer b = internalAttributeValue.getB();
+        if (b != null) {
+            sdkBytes = SdkBytes.fromByteBuffer(b);
         } else {
             sdkBytes = null;
         }
         return AttributeValue.builder()
-                .b(SdkBytes.fromByteBuffer(internalAttributeValue.getB()))
+                .b(sdkBytes)
                 .bool(internalAttributeValue.getBOOL())
-                .bs(sdkBytes)
+                .bs(sdkBytesList)
                 .l(convertFromInternal(internalAttributeValue.getL()))
                 .m(convertFromInternal(internalAttributeValue.getM()))
                 .n(internalAttributeValue.getN())
