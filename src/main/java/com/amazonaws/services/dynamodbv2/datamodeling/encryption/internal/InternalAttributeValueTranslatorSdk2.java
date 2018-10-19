@@ -1,13 +1,19 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.util.DefaultSdkAutoConstructList;
+import software.amazon.awssdk.core.util.DefaultSdkAutoConstructMap;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class InternalAttributeValueTranslatorSdk2 implements InternalAttributeValueTranslator<AttributeValue> {
+    private static final DefaultSdkAutoConstructList defaultListInstance = DefaultSdkAutoConstructList.getInstance();
+    private static final Map defaultMapInstance = DefaultSdkAutoConstructMap.getInstance();
+
     @Override
     public InternalAttributeValue convertFrom(AttributeValue attributeValue) {
         if (attributeValue == null) {
@@ -18,13 +24,27 @@ public class InternalAttributeValueTranslatorSdk2 implements InternalAttributeVa
             internalAttributeValue.setB(attributeValue.b().asByteBuffer());
         }
         internalAttributeValue.setBOOL(attributeValue.bool());
-        if(attributeValue.bs() != null) {
+
+        if(defaultListInstance.equals(attributeValue.bs())) {
+            internalAttributeValue.setBS(defaultListInstance);
+        } else if (attributeValue.bs() != null) {
             List<ByteBuffer> byteBuffers = attributeValue.bs().stream()
                     .map((b) -> b.asByteBuffer()).collect(Collectors.toList());
             internalAttributeValue.setBS(byteBuffers);
         }
-        internalAttributeValue.setL(convertFrom(attributeValue.l()));
-        internalAttributeValue.setM(convertFrom(attributeValue.m()));
+
+        if(defaultListInstance.equals(attributeValue.l())) {
+            internalAttributeValue.setL(defaultListInstance);
+        } else if (attributeValue.l() != null) {
+            internalAttributeValue.setL(convertFrom(attributeValue.l()));
+        }
+
+        if(defaultMapInstance.equals(attributeValue.m())) {
+            internalAttributeValue.setM(defaultMapInstance);
+        } else if (attributeValue.m() != null) {
+            internalAttributeValue.setM(convertFrom(attributeValue.m()));
+        }
+
         internalAttributeValue.setN(attributeValue.n());
         internalAttributeValue.setNS(attributeValue.ns());
         internalAttributeValue.setNULL(attributeValue.nul());
@@ -38,28 +58,47 @@ public class InternalAttributeValueTranslatorSdk2 implements InternalAttributeVa
         if (internalAttributeValue == null) {
             return null;
         }
-        List<SdkBytes> sdkBytesList;
-        if (internalAttributeValue.getBS() != null) {
-            sdkBytesList = internalAttributeValue.getBS().stream().map(SdkBytes::fromByteBuffer).collect(Collectors.toList());
+
+        List<ByteBuffer> bs = internalAttributeValue.getBS();
+        AttributeValue.Builder builder = AttributeValue.builder();
+
+        if (defaultListInstance.equals(bs)) {
+            builder.bs(defaultListInstance);
+        } else if (bs == null) {
+            builder.bs((List)null);
         } else {
-            sdkBytesList = null;
+            builder.bs(bs.stream().map(SdkBytes::fromByteBuffer).collect(Collectors.toList()));
         }
-        SdkBytes sdkBytes;
+
+        Map<String, InternalAttributeValue> m = internalAttributeValue.getM();
+        if (defaultMapInstance.equals(m)) {
+            builder.m(defaultMapInstance);
+        } else if (m == null) {
+            builder.m((Map)null);
+        } else {
+            builder.m(convertFromInternal(m));
+        }
+
+        List<InternalAttributeValue> l = internalAttributeValue.getL();
+        if(defaultListInstance.equals(l)) {
+            builder.l(defaultListInstance);
+        } else if (l == null) {
+            builder.l((List)null);
+        } else {
+            builder.l(convertFromInternal(l));
+        }
+
         ByteBuffer b = internalAttributeValue.getB();
         if (b != null) {
-            sdkBytes = SdkBytes.fromByteBuffer(b);
-        } else {
-            sdkBytes = null;
+            builder.b(SdkBytes.fromByteBuffer(b));
         }
-        return AttributeValue.builder()
-                .b(sdkBytes)
+        // DONT COMMIT THIS CODE PLEASE I BEG YOU, it is missing .ss, .ns, .m, .l at the least...
+        return builder
                 .bool(internalAttributeValue.getBOOL())
-                .bs(sdkBytesList)
-                .l(convertFromInternal(internalAttributeValue.getL()))
-                .m(convertFromInternal(internalAttributeValue.getM()))
                 .n(internalAttributeValue.getN())
                 .ns(internalAttributeValue.getNS())
                 .s(internalAttributeValue.getS())
-                .ss(internalAttributeValue.getSS()).build();
+                .ss(internalAttributeValue.getS())
+                .build();
     }
 }

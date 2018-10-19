@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.KeyGenerator;
@@ -48,7 +50,12 @@ import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
 import com.amazonaws.services.dynamodbv2.testing.AttrMatcher;
 import org.junit.Before;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
 
 import static org.junit.Assert.*;
 
@@ -138,6 +145,45 @@ public class DynamoDBEncryptorSdk2Test {
             Set<T> s2 = new HashSet<T>(c2);
             Assert.assertEquals(s1, s2);
         }
+    }
+
+    @Test
+    public void testThatCrazyDynamoStuffEXCLAMATIONMARK() throws ExecutionException, InterruptedException {
+        KeyGenerator aesGen = null;
+        try {
+            aesGen = KeyGenerator.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        aesGen.init(128, Utils.getRng());
+        SecretKey encryptionKey = aesGen.generateKey();
+
+        KeyGenerator macGen = null;
+        try {
+            macGen = KeyGenerator.getInstance("HmacSHA256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        macGen.init(256, Utils.getRng());
+        SecretKey macKey = macGen.generateKey();
+        DynamoDBEncryptorSdk2 encryptorSdk2 = DynamoDBEncryptorSdk2.getInstance(new SymmetricStaticProviderSdk2(encryptionKey, macKey, Collections.emptyMap()));
+
+        DynamoDbAsyncClient client = DynamoDbAsyncClient.builder()
+                .overrideConfiguration(ClientOverrideConfiguration.builder()
+                        .addExecutionInterceptor(new CryptoInterceptor(encryptorSdk2))
+                        .build())
+                .build();
+
+        Map<String, AttributeValue> item = new HashMap<>();
+        item.put("hk", AttributeValue.builder().s("wuw").build());
+        item.put("sk", AttributeValue.builder().s("such").build());
+        item.put("test1", AttributeValue.builder().s("WOT").build());
+        item.put("test2", AttributeValue.builder().s("WOW!!!").build());
+        item.put("test3", AttributeValue.builder().s("INVISIBLE!!!").build());
+        PutItemRequest putItemRequest = PutItemRequest.builder().item(item).tableName("Channels").build();
+        CompletableFuture<PutItemResponse> putItemResponseCompletableFuture = client.putItem(putItemRequest);
+        PutItemResponse putItemResponse = putItemResponseCompletableFuture.get();
+
     }
 
     @Test
