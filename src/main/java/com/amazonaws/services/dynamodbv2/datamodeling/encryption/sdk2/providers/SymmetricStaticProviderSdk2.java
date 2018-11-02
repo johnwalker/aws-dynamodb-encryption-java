@@ -39,8 +39,8 @@ public class SymmetricStaticProviderSdk2 implements EncryptionMaterialsProviderS
     /**
      * @param encryptionKey
      *            the value to be returned by
-     *            {@link #getEncryptionMaterials(EncryptionContext)} and
-     *            {@link #getDecryptionMaterials(EncryptionContext)}
+     *            {@link #getEncryptionMaterials(EncryptionContextSDK2)} and
+     *            {@link #getDecryptionMaterials(EncryptionContextSDK2)}
      * @param signingPair
      *            the keypair used to sign/verify the data stored in Dynamo. If
      *            only the public key is provided, then this provider may be
@@ -53,8 +53,8 @@ public class SymmetricStaticProviderSdk2 implements EncryptionMaterialsProviderS
     /**
      * @param encryptionKey
      *            the value to be returned by
-     *            {@link #getEncryptionMaterials(EncryptionContext)} and
-     *            {@link #getDecryptionMaterials(EncryptionContext)}
+     *            {@link #getEncryptionMaterials(EncryptionContextSDK2)} and
+     *            {@link #getDecryptionMaterials(EncryptionContextSDK2)}
      * @param signingPair
      *            the keypair used to sign/verify the data stored in Dynamo. If
      *            only the public key is provided, then this provider may be
@@ -73,8 +73,8 @@ public class SymmetricStaticProviderSdk2 implements EncryptionMaterialsProviderS
     /**
      * @param encryptionKey
      *            the value to be returned by
-     *            {@link #getEncryptionMaterials(EncryptionContext)} and
-     *            {@link #getDecryptionMaterials(EncryptionContext)}
+     *            {@link #getEncryptionMaterials(EncryptionContextSDK2)} and
+     *            {@link #getDecryptionMaterials(EncryptionContextSDK2)}
      * @param macKey
      *            the key used to sign/verify the data stored in Dynamo.
      */
@@ -85,8 +85,8 @@ public class SymmetricStaticProviderSdk2 implements EncryptionMaterialsProviderS
     /**
      * @param encryptionKey
      *            the value to be returned by
-     *            {@link #getEncryptionMaterials(EncryptionContext)} and
-     *            {@link #getDecryptionMaterials(EncryptionContext)}
+     *            {@link #getEncryptionMaterials(EncryptionContextSDK2)} and
+     *            {@link #getDecryptionMaterials(EncryptionContextSDK2)}
      * @param macKey
      *            the key used to sign/verify the data stored in Dynamo.
      * @param description
