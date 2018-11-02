@@ -15,8 +15,7 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
 /**
  * Interface for providing encryption materials.
@@ -27,4 +26,4 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.Encry
  * 
  * @author Greg Rubin 
  */
-public interface EncryptionMaterialsProvider extends GenericEncryptionMaterialsProvider<EncryptionContext> {}
+public interface EncryptionMaterialsProvider extends InternalEncryptionMaterialsProvider<EncryptionContext> {}

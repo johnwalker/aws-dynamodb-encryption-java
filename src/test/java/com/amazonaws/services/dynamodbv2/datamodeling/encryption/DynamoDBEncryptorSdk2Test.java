@@ -7,16 +7,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
-import java.security.SignatureException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,12 +23,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalByteBufferUtils;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProviderSdk2;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.SymmetricStaticProviderSdk2;
-import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.ECParameterSpec;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.SymmetricStaticProviderSdk2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.CryptoInterceptor;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.DynamoDBEncryptorSdk2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -44,20 +35,13 @@ import org.junit.Test;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.SymmetricStaticProvider;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
-import com.amazonaws.services.dynamodbv2.testing.AttrMatcher;
-import org.junit.Before;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
-
-import static org.junit.Assert.*;
 
 public class DynamoDBEncryptorSdk2Test {
 

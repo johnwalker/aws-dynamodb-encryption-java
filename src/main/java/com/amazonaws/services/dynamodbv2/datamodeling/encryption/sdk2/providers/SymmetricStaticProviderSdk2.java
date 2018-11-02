@@ -12,14 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers;
+package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContextSDK2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.CryptographicMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.SymmetricRawMaterials;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 
 import javax.crypto.SecretKey;
 import java.security.KeyPair;

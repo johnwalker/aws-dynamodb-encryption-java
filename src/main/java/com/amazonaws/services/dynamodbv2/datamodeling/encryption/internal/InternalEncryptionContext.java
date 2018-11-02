@@ -1,16 +1,15 @@
-package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
+package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptor;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-public class GenericEncryptionContext<T, X extends GenericEncryptionContext.Builder<T, ?, ?>> {
+public class InternalEncryptionContext<T, X extends InternalEncryptionContext.Builder<T, ?, ?>> {
     private final String tableName;
     private final Map<String, T> attributeValues;
     private final Class<?> modeledClass;
@@ -19,7 +18,7 @@ public class GenericEncryptionContext<T, X extends GenericEncryptionContext.Buil
     private final String rangeKeyName;
     private final Map<String, String> materialDescription;
 
-     GenericEncryptionContext(X builder) {
+     public InternalEncryptionContext(X builder) {
         tableName = builder.getTableName();
         attributeValues = (Map<String, T>) builder.getAttributeValues();
         modeledClass = builder.getModeledClass();
@@ -86,7 +85,7 @@ public class GenericEncryptionContext<T, X extends GenericEncryptionContext.Buil
      * This class is <em>not</em> thread-safe.
      */
     public static abstract class Builder<U,
-            Q extends GenericEncryptionContext<U, V>,
+            Q extends InternalEncryptionContext<U, V>,
             V extends Builder<U, Q, V>> {
         private String tableName = null;
         private Map<String, U> attributeValues = null;
@@ -116,7 +115,7 @@ public class GenericEncryptionContext<T, X extends GenericEncryptionContext.Buil
             materialDescription = context.getMaterialDescription();
         }
 
-        abstract Q build();
+        public abstract Q build();
 
         public V withTableName(String tableName) {
             this.tableName = tableName;

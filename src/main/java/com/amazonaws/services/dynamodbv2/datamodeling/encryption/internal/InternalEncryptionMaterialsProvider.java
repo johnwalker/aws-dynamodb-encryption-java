@@ -1,9 +1,9 @@
-package com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers;
+package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 
-public interface GenericEncryptionMaterialsProvider<T> {
+public interface InternalEncryptionMaterialsProvider<T> {
     /**
      * Retrieves encryption materials matching the specified description from some source.
      *

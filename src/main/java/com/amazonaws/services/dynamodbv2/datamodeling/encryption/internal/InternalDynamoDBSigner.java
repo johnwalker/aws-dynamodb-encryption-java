@@ -1,10 +1,22 @@
+/*
+ * Copyright 2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DelegatedKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.AttributeValueMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -17,7 +29,10 @@ import java.security.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-// Acts on Map<String, String> instead of AttributeValue
+/**
+ * @author Greg Rubin 
+ */
+// NOTE: This class must remain thread-safe.
 public class InternalDynamoDBSigner {
     private static final ConcurrentHashMap<String, InternalDynamoDBSigner> cache =
             new ConcurrentHashMap<String, InternalDynamoDBSigner>();
@@ -62,7 +77,7 @@ public class InternalDynamoDBSigner {
         hmacComparisonKey = new SecretKeySpec(tmpKey, "HmacSHA256");
     }
 
-    void verifySignature(Map<String, AttributeValue> itemAttributes, Map<String, Set<EncryptionFlags>> attributeFlags,
+    public void verifySignature(Map<String, InternalAttributeValue> itemAttributes, Map<String, Set<EncryptionFlags>> attributeFlags,
                          byte[] associatedData, Key verificationKey, ByteBuffer signature) throws GeneralSecurityException {
         if (verificationKey instanceof DelegatedKey) {
             DelegatedKey dKey = (DelegatedKey)verificationKey;
@@ -89,8 +104,8 @@ public class InternalDynamoDBSigner {
         }
     }
 
-    static byte[] calculateStringToSign(Map<String, AttributeValue> itemAttributes,
-                                        Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData)
+    static byte[] calculateStringToSign(Map<String, InternalAttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData)
             throws NoSuchAlgorithmException {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -107,7 +122,7 @@ public class InternalDynamoDBSigner {
             for (String name : attrNames) {
                 Set<EncryptionFlags> set = attributeFlags.get(name);
                 if(set != null && set.contains(EncryptionFlags.SIGN)) {
-                    AttributeValue tmp = itemAttributes.get(name);
+                    InternalAttributeValue tmp = itemAttributes.get(name);
                     out.write(sha256.digest(name.getBytes(UTF8)));
                     sha256.reset();
                     if (set.contains(EncryptionFlags.ENCRYPT)) {
@@ -119,7 +134,7 @@ public class InternalDynamoDBSigner {
 
                     sha256.reset();
 
-                    sha256.update(AttributeValueMarshaller.marshall(tmp));
+                    sha256.update(InternalAttributeValueMarshaller.marshall(tmp));
                     out.write(sha256.digest());
                     sha256.reset();
                 }
@@ -135,8 +150,8 @@ public class InternalDynamoDBSigner {
      * The itemAttributes have already been encrypted, if necessary, before the
      * signing.
      */
-    byte[] calculateSignature(
-            Map<String, String> itemAttributes,
+    public byte[] calculateSignature(
+            Map<String, InternalAttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             byte[] associatedData, Key key) throws GeneralSecurityException {
         if (key instanceof DelegatedKey) {
@@ -150,16 +165,16 @@ public class InternalDynamoDBSigner {
         }
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
-                              Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
-                              DelegatedKey key) throws GeneralSecurityException {
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
+            DelegatedKey key) throws GeneralSecurityException {
         byte[] stringToSign = calculateStringToSign(itemAttributes, attributeFlags, associatedData);
         return key.sign(stringToSign, key.getAlgorithm());
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
-                              Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
-                              SecretKey key) throws GeneralSecurityException {
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
+            SecretKey key) throws GeneralSecurityException {
         if (key instanceof DelegatedKey) {
             return calculateSignature(itemAttributes, attributeFlags, associatedData, (DelegatedKey)key);
         }
@@ -170,9 +185,9 @@ public class InternalDynamoDBSigner {
         return hmac.doFinal();
     }
 
-    byte[] calculateSignature(Map<String, AttributeValue> itemAttributes,
-                              Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
-                              PrivateKey key) throws GeneralSecurityException {
+    byte[] calculateSignature(Map<String, InternalAttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags, byte[] associatedData,
+            PrivateKey key) throws GeneralSecurityException {
         byte[] stringToSign = calculateStringToSign(itemAttributes, attributeFlags, associatedData);
         Signature sig = Signature.getInstance(signingAlgorithm);
         sig.initSign(key, rnd);
@@ -180,7 +195,7 @@ public class InternalDynamoDBSigner {
         return sig.sign();
     }
 
-    String getSigningAlgorithm() {
+    public String getSigningAlgorithm() {
         return signingAlgorithm;
     }
 
