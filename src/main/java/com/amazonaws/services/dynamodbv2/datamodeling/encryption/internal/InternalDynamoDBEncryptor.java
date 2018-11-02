@@ -56,14 +56,14 @@ import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
 public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T, V>,
         V extends InternalEncryptionContext.Builder<T, U, V>> {
     // TODO: Changing these to protected is a disaster waiting to happen. We'll come back to these soon
-    protected static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
-    protected static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
-    protected static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
+    private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
+    private static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
+    private static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
     protected static final String DEFAULT_DESCRIPTION_BASE = "amzn-ddb-map-"; // Same as the Mapper
-    protected static final Charset UTF8 = Charset.forName("UTF-8");
-    protected static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
-    protected static final ConcurrentHashMap<String, Integer> BLOCK_SIZE_CACHE = new ConcurrentHashMap<>();
-    protected static final Function<String, Integer> BLOCK_SIZE_CALCULATOR = (transformation) -> {
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
+    private static final ConcurrentHashMap<String, Integer> BLOCK_SIZE_CACHE = new ConcurrentHashMap<>();
+    private static final Function<String, Integer> BLOCK_SIZE_CALCULATOR = (transformation) -> {
         try {
             final Cipher c = Cipher.getInstance(transformation);
             return c.getBlockSize();
@@ -72,7 +72,7 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
         }
     };
 
-    protected static final int CURRENT_VERSION = 0;
+    private static final int CURRENT_VERSION = 0;
     private final Function<U, V> encryptionContextBuilderSupplier;
 
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
@@ -122,7 +122,7 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
     }
     
     /**
-     * @see #decryptAllFieldsExcept(Map, EncryptionContext, String...)
+     * @see #decryptAllFieldsExcept(Map, U, String...)
      */
     public Map<String, T> decryptAllFieldsExcept(
             Map<String, T> itemAttributes,

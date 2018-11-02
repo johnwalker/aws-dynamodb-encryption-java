@@ -7,6 +7,9 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 
 public class DynamoDBEncryptor extends InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder> {
+
+    public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
+
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
         super(provider, descriptionBase,
                 (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext),
