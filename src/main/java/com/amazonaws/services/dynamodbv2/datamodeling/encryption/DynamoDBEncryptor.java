@@ -29,6 +29,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.util.CollectionUtils;
+import software.amazon.awssdk.utils.StringUtils;
 
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_METADATA_FIELD;
@@ -184,12 +185,16 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
         Map<String, AttributeValue> decryptedAttributeValueMap = internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
 
         // For backwards compatibility: copy the original unencrypted attributes back into the result
-//        for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
-//            Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
-//            if (flags == null || !flags.contains(EncryptionFlags.ENCRYPT)) {
-//                decryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
-//            }
-//        }
+        if (!attributeFlags.isEmpty()) {
+            for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
+                Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
+                if (!StringUtils.equals(entry.getKey(), getMaterialDescriptionFieldName())
+                        && !StringUtils.equals(entry.getKey(), getSignatureFieldName())
+                        && (flags == null || !flags.contains(EncryptionFlags.ENCRYPT))){
+                    decryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
         return decryptedAttributeValueMap;
 
     }

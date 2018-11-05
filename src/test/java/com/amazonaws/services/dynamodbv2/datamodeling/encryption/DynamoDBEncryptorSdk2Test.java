@@ -88,31 +88,6 @@ public class DynamoDBEncryptorSdk2Test {
                 .build();
     }
 
-    @Test
-    public void fullEncryption() throws GeneralSecurityException {
-        Map<String, AttributeValue> encryptedAttributes =
-                encryptor.encryptAllFieldsExcept(Collections.unmodifiableMap(attribs), context, "hashKey", "rangeKey", "version");
-        // assertThat(encryptedAttributes, AttrMatcher.invert(attribs));
-
-        Map<String, AttributeValue> decryptedAttributes =
-                encryptor.decryptAllFieldsExcept(Collections.unmodifiableMap(encryptedAttributes), context, "hashKey", "rangeKey", "version");
-        // assertThat(decryptedAttributes, AttrMatcher.match(attribs));
-
-        // Make sure keys and version are not encrypted
-        assertAttrEquals(attribs.get("hashKey"), encryptedAttributes.get("hashKey"));
-        assertAttrEquals(attribs.get("rangeKey"), encryptedAttributes.get("rangeKey"));
-        assertAttrEquals(attribs.get("version"), encryptedAttributes.get("version"));
-
-        // Make sure String has been encrypted (we'll assume the others are correct as well)
-        assertTrue(encryptedAttributes.containsKey("stringValue"));
-        assertNull(encryptedAttributes.get("stringValue").s());
-        assertNotNull(encryptedAttributes.get("stringValue").b());
-
-        // Make sure we're calling the proper getEncryptionMaterials method
-        assertEquals("Wrong getEncryptionMaterials() called",
-                1, prov.getCallCount("getEncryptionMaterials(EncryptionContext context)"));
-    }
-
     private void assertAttrEquals(AttributeValue o1, AttributeValue o2) {
         Assert.assertEquals(o1.b(), o2.b());
         assertSetsEqual(o1.bs(), o2.bs());
