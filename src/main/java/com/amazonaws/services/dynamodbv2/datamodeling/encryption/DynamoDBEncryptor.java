@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,15 +42,13 @@ import javax.crypto.spec.IvParameterSpec;
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk1;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalByteBufferUtils;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalDynamoDBEncryptor;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.AttributeValueMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.ByteBufferInputStream;
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+
+import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
+import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_METADATA_FIELD;
+import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
 
 /**
  * The low-level API used by {@link AttributeEncryptor} to perform crypto
@@ -57,24 +56,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
  *
  * @author Greg Rubin
  */
-// InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder>
-public class DynamoDBEncryptor {
-    private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
-    private static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
-    private static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
-    private static final String DEFAULT_DESCRIPTION_BASE = "amzn-ddb-map-"; // Same as the Mapper
-    private static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
-    private static final ConcurrentHashMap<String, Integer> BLOCK_SIZE_CACHE = new ConcurrentHashMap<>();
-    private static final Function<String, Integer> BLOCK_SIZE_CALCULATOR = (transformation) -> {
-        try {
-            final Cipher c = Cipher.getInstance(transformation);
-            return c.getBlockSize();
-        } catch (final GeneralSecurityException ex) {
-            throw new IllegalArgumentException("Algorithm does not exist", ex);
-        }
-    };
-
+public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
 
@@ -85,7 +67,7 @@ public class DynamoDBEncryptor {
     private InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder> internalEncryptor;
     private static DescriptionMarshaller DESCRIPTION_MARSHALLER = new DescriptionMarshaller();
 
-    public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
+    public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
 
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
         this.encryptionMaterialsProvider = provider;
@@ -94,7 +76,7 @@ public class DynamoDBEncryptor {
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         internalEncryptor = new InternalDynamoDBEncryptor<>(provider, descriptionBase,
                 (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext),
-                new InternalAttributeValueTranslatorSdk1(), new DescriptionMarshaller());
+                new InternalAttributeValueTranslatorSdk1(), new DescriptionMarshaller(), (DynamoDBEncryptionConfiguration) this);
     }
 
     public static DynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase) {
@@ -159,21 +141,7 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotDecrypt) {
-        Map<String, Set<EncryptionFlags>> attributeFlags = new HashMap<String, Set<EncryptionFlags>>();
-
-        for (String fieldName : doNotDecrypt) {
-            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
-        }
-
-        for (String fieldName : itemAttributes.keySet()) {
-            if (!attributeFlags.containsKey(fieldName) &&
-                    !fieldName.equals(getMaterialDescriptionFieldName()) &&
-                    !fieldName.equals(getSignatureFieldName())) {
-                attributeFlags.put(fieldName,
-                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
-            }
-        }
-        return attributeFlags;
+        return internalEncryptor.allDecryptionFlagsExcept(itemAttributes, doNotDecrypt);
     }
 
     /**
@@ -222,68 +190,14 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allEncryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotEncrypt) {
-        Map<String, Set<EncryptionFlags>> attributeFlags =
-                new HashMap<String, Set<EncryptionFlags>>();
-        for (String fieldName : doNotEncrypt) {
-            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
-        }
-
-        for (String fieldName : itemAttributes.keySet()) {
-            if (!attributeFlags.containsKey(fieldName)) {
-                attributeFlags.put(fieldName,
-                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
-            }
-        }
-        return attributeFlags;
+        return internalEncryptor.allEncryptionFlagsExcept(itemAttributes, doNotEncrypt);
     }
 
     public Map<String, AttributeValue> decryptRecord(
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        if (attributeFlags.isEmpty()) {
-            return itemAttributes;
-        }
-        // Copy to avoid changing anyone elses objects
-        itemAttributes = new HashMap<String, AttributeValue>(itemAttributes);
-
-        Map<String, String> materialDescription = Collections.emptyMap();
-        DecryptionMaterials materials;
-        SecretKey decryptionKey;
-
-        DynamoDBSigner signer = DynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
-
-        if (itemAttributes.containsKey(materialDescriptionFieldName)) {
-            materialDescription = unmarshallDescription(itemAttributes.get(materialDescriptionFieldName));
-        }
-        // Copy the material description and attribute values into the context
-        context = new EncryptionContext.Builder(context)
-                .withMaterialDescription(materialDescription)
-                .withAttributeValues(itemAttributes)
-                .build();
-
-        materials = encryptionMaterialsProvider.getDecryptionMaterials(context);
-        decryptionKey = materials.getDecryptionKey();
-        if (materialDescription.containsKey(signingAlgorithmHeader)) {
-            String signingAlg = materialDescription.get(signingAlgorithmHeader);
-            signer = DynamoDBSigner.getInstance(signingAlg, Utils.getRng());
-        }
-
-        ByteBuffer signature;
-        if (!itemAttributes.containsKey(signatureFieldName) || itemAttributes.get(signatureFieldName).getB() == null) {
-            signature = ByteBuffer.allocate(0);
-        } else {
-            signature = itemAttributes.get(signatureFieldName).getB().asReadOnlyBuffer();
-        }
-        itemAttributes.remove(signatureFieldName);
-
-        String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
-        signer.verifySignature(itemAttributes, attributeFlags, associatedData.getBytes(UTF8),
-                materials.getVerificationKey(), signature);
-        itemAttributes.remove(materialDescriptionFieldName);
-
-        actualDecryption(itemAttributes, attributeFlags, decryptionKey, materialDescription);
-        return itemAttributes;
+        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
     }
 
     /**
@@ -305,154 +219,16 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        if (attributeFlags.isEmpty()) {
-            return itemAttributes;
-        }
-        // Copy to avoid changing anyone elses objects
-        itemAttributes = new HashMap<String, AttributeValue>(itemAttributes);
-
-        // Copy the attribute values into the context
-        context = new EncryptionContext.Builder(context)
-                .withAttributeValues(itemAttributes)
-                .build();
-
-        EncryptionMaterials materials = encryptionMaterialsProvider.getEncryptionMaterials(context);
-        // We need to copy this because we modify it to record other encryption details
-        Map<String, String> materialDescription = new HashMap<String, String>(
-                materials.getMaterialDescription());
-        SecretKey encryptionKey = materials.getEncryptionKey();
-
-        actualEncryption(itemAttributes, attributeFlags, materialDescription, encryptionKey);
-
-        // The description must be stored after encryption because its data
-        // is necessary for proper decryption.
-        final String signingAlgo = materialDescription.get(signingAlgorithmHeader);
-        DynamoDBSigner signer;
-        if (signingAlgo != null) {
-            signer = DynamoDBSigner.getInstance(signingAlgo, Utils.getRng());
-        } else {
-            signer = DynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
-        }
-
-        if (materials.getSigningKey() instanceof PrivateKey ) {
-            materialDescription.put(signingAlgorithmHeader, signer.getSigningAlgorithm());
-        }
-        if (!materialDescription.isEmpty()) {
-            itemAttributes.put(materialDescriptionFieldName, marshallDescription(materialDescription));
-        }
-
-        String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
-        byte[] signature = signer.calculateSignature(itemAttributes, attributeFlags,
-                associatedData.getBytes(UTF8), materials.getSigningKey());
-
-        AttributeValue signatureAttribute = new AttributeValue();
-        signatureAttribute.setB(ByteBuffer.wrap(signature));
-        itemAttributes.put(signatureFieldName, signatureAttribute);
-
-        return itemAttributes;
-    }
-
-    private void actualDecryption(Map<String, AttributeValue> itemAttributes,
-                                  Map<String, Set<EncryptionFlags>> attributeFlags, SecretKey encryptionKey,
-                                  Map<String, String> materialDescription) throws GeneralSecurityException {
-        final String encryptionMode = encryptionKey != null ?  encryptionKey.getAlgorithm() +
-                materialDescription.get(symmetricEncryptionModeHeader) : null;
-        Cipher cipher = null;
-        int blockSize = -1;
-
-        for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
-            Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
-            if (flags != null && flags.contains(EncryptionFlags.ENCRYPT)) {
-                if (!flags.contains(EncryptionFlags.SIGN)) {
-                    throw new IllegalArgumentException("All encrypted fields must be signed. Bad field: " + entry.getKey());
-                }
-                ByteBuffer plainText;
-                ByteBuffer cipherText = entry.getValue().getB().asReadOnlyBuffer();
-                cipherText.rewind();
-                if (encryptionKey instanceof DelegatedKey) {
-                    plainText = ByteBuffer.wrap(((DelegatedKey)encryptionKey).decrypt(InternalByteBufferUtils.toByteArray(cipherText), null, encryptionMode));
-                } else {
-                    if (cipher == null) {
-                        blockSize = getBlockSize(encryptionMode);
-                        cipher = Cipher.getInstance(encryptionMode);
-                    }
-                    byte[] iv = new byte[blockSize];
-                    cipherText.get(iv);
-                    cipher.init(Cipher.DECRYPT_MODE, encryptionKey, new IvParameterSpec(iv), Utils.getRng());
-                    plainText = ByteBuffer.allocate(cipher.getOutputSize(cipherText.remaining()));
-                    cipher.doFinal(cipherText, plainText);
-                    plainText.rewind();
-                }
-                entry.setValue(AttributeValueMarshaller.unmarshall(plainText));
-            }
-        }
+        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
     }
 
     protected static int getBlockSize(final String encryptionMode) {
-        return BLOCK_SIZE_CACHE.computeIfAbsent(encryptionMode, BLOCK_SIZE_CALCULATOR);
-    }
-
-    /**
-     * This method has the side effect of replacing the plaintext
-     * attribute-values of "itemAttributes" with ciphertext attribute-values
-     * (which are always in the form of ByteBuffer) as per the corresponding
-     * attribute flags.
-     */
-    private void actualEncryption(Map<String, AttributeValue> itemAttributes,
-                                  Map<String, Set<EncryptionFlags>> attributeFlags,
-                                  Map<String, String> materialDescription,
-                                  SecretKey encryptionKey) throws GeneralSecurityException {
-        String encryptionMode = null;
-        if (encryptionKey != null) {
-            materialDescription.put(this.symmetricEncryptionModeHeader,
-                    SYMMETRIC_ENCRYPTION_MODE);
-            encryptionMode = encryptionKey.getAlgorithm() + SYMMETRIC_ENCRYPTION_MODE;
-        }
-        Cipher cipher = null;
-        int blockSize = -1;
-
-        for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
-            Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
-            if (flags != null && flags.contains(EncryptionFlags.ENCRYPT)) {
-                if (!flags.contains(EncryptionFlags.SIGN)) {
-                    throw new IllegalArgumentException("All encrypted fields must be signed. Bad field: " + entry.getKey());
-                }
-                ByteBuffer plainText = AttributeValueMarshaller.marshall(entry.getValue());
-                plainText.rewind();
-                ByteBuffer cipherText;
-                if (encryptionKey instanceof DelegatedKey) {
-                    DelegatedKey dk = (DelegatedKey) encryptionKey;
-                    cipherText = ByteBuffer.wrap(
-                            dk.encrypt(InternalByteBufferUtils.toByteArray(plainText), null, encryptionMode));
-                } else {
-                    if (cipher == null) {
-                        blockSize = getBlockSize(encryptionMode);
-                        cipher = Cipher.getInstance(encryptionMode);
-                    }
-                    // Encryption format: <iv><ciphertext>
-                    // Note a unique iv is generated per attribute
-                    cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, Utils.getRng());
-                    cipherText = ByteBuffer.allocate(blockSize + cipher.getOutputSize(plainText.remaining()));
-                    cipherText.position(blockSize);
-                    cipher.doFinal(plainText, cipherText);
-                    cipherText.flip();
-                    final byte[] iv = cipher.getIV();
-                    if (iv.length != blockSize) {
-                        throw new IllegalStateException(String.format("Generated IV length (%d) not equal to block size (%d)",
-                                iv.length, blockSize));
-                    }
-                    cipherText.put(iv);
-                    cipherText.rewind();
-                }
-                // Replace the plaintext attribute value with the encrypted content
-                entry.setValue(new AttributeValue().withB(cipherText));
-            }
-        }
+        return InternalDynamoDBEncryptor.getBlockSize(encryptionMode);
     }
 
     /**
      * Get the name of the DynamoDB field used to store the signature.
-     * Defaults to {@link #DEFAULT_SIGNATURE_FIELD}.
+     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
      *
      * @return the name of the DynamoDB field used to store the signature
      */
@@ -462,6 +238,7 @@ public class DynamoDBEncryptor {
 
     /**
      * Set the name of the DynamoDB field used to store the signature.
+     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNING_ALGORITHM_HEADER}
      *
      * @param signatureFieldName
      */
@@ -471,7 +248,7 @@ public class DynamoDBEncryptor {
 
     /**
      * Get the name of the DynamoDB field used to store metadata used by the
-     * DynamoDBEncryptedMapper. Defaults to {@link #DEFAULT_METADATA_FIELD}.
+     * DynamoDBEncryptedMapper. Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
      *
      * @return the name of the DynamoDB field used to store metadata used by the
      *         DynamoDBEncryptedMapper

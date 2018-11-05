@@ -10,7 +10,7 @@ public class DynamoDBEncryptorSdk2 extends InternalDynamoDBEncryptor<AttributeVa
     protected DynamoDBEncryptorSdk2(EncryptionMaterialsProviderSdk2 provider, String descriptionBase) {
         super(provider, descriptionBase,
                 (EncryptionContextSDK2 encryptionContextSDK2) -> new EncryptionContextSDK2.Builder(encryptionContextSDK2),
-                new InternalAttributeValueTranslatorSdk2(), new DescriptionMarshaller());
+                new InternalAttributeValueTranslatorSdk2(), new DescriptionMarshaller(), null);
     }
 
     public static DynamoDBEncryptorSdk2 getInstance(EncryptionMaterialsProviderSdk2 provider, String descriptionbase) {

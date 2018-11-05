@@ -14,11 +14,6 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
@@ -40,11 +35,10 @@ import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DelegatedKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
-import com.amazonaws.services.dynamodbv2.datamodeling.internal.ByteBufferInputStream;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
 
 /**
@@ -56,8 +50,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
 public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T, V>,
         V extends InternalEncryptionContext.Builder<T, U, V>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
-    private static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
-    private static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
     protected static final String DEFAULT_DESCRIPTION_BASE = "amzn-ddb-map-"; // Same as the Mapper
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
@@ -71,29 +63,26 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         }
     };
 
-    private static final int CURRENT_VERSION = 0;
     private final Function<U, V> encryptionContextBuilderSupplier;
     private final DescriptionMarshaller descriptionMarshaller;
 
-    private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
-    private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
-    
     private InternalEncryptionMaterialsProvider<U> encryptionMaterialsProvider;
     private final String descriptionBase;
     private final InternalAttributeValueTranslator<T> internalAttributeValueTranslator;
+    private final DynamoDBEncryptionConfiguration encryptionConfiguration;
     private final String symmetricEncryptionModeHeader;
     private final String signingAlgorithmHeader;
-    
-    public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
-    
+
     public InternalDynamoDBEncryptor(InternalEncryptionMaterialsProvider<U> provider,
                                      String descriptionBase,
                                      Function<U, V> encryptionContextBuilderSupplier,
                                      InternalAttributeValueTranslator<T> internalAttributeValueTranslator,
-                                     DescriptionMarshaller descriptionMarshaller) {
+                                     DescriptionMarshaller descriptionMarshaller,
+                                     DynamoDBEncryptionConfiguration encryptionConfiguration) {
         this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
         this.internalAttributeValueTranslator = internalAttributeValueTranslator;
+        this.encryptionConfiguration = encryptionConfiguration;
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         this.encryptionContextBuilderSupplier = encryptionContextBuilderSupplier;
@@ -162,8 +151,8 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
 
         for (String fieldName : itemAttributes.keySet()) {
             if (!attributeFlags.containsKey(fieldName) && 
-                    !fieldName.equals(getMaterialDescriptionFieldName()) && 
-                    !fieldName.equals(getSignatureFieldName())) {
+                    !fieldName.equals(encryptionConfiguration.getMaterialDescriptionFieldName()) &&
+                    !fieldName.equals(encryptionConfiguration.getSignatureFieldName())) {
                 attributeFlags.put(fieldName,
                         EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
             }
@@ -249,8 +238,8 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         InternalDynamoDBSigner signer = InternalDynamoDBSigner.getInstance(DEFAULT_SIGNATURE_ALGORITHM, Utils.getRng());
         Map<String, InternalAttributeValue> internalAttributeValueMap = internalAttributeValueTranslator.convertFrom(itemAttributes);
 
-        if (internalAttributeValueMap.containsKey(materialDescriptionFieldName)) {
-            materialDescription = unmarshallDescription(internalAttributeValueMap.get(materialDescriptionFieldName));
+        if (internalAttributeValueMap.containsKey(encryptionConfiguration.getMaterialDescriptionFieldName())) {
+            materialDescription = unmarshallDescription(internalAttributeValueMap.get(encryptionConfiguration.getMaterialDescriptionFieldName()));
         }
         // Copy the material description and attribute values into the context
         context = encryptionContextBuilderSupplier.apply(context)
@@ -266,17 +255,17 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         }
         
         ByteBuffer signature;
-        if (!internalAttributeValueMap.containsKey(signatureFieldName) || internalAttributeValueMap.get(signatureFieldName).getB() == null) {
+        if (!internalAttributeValueMap.containsKey(encryptionConfiguration.getSignatureFieldName()) || internalAttributeValueMap.get(encryptionConfiguration.getSignatureFieldName()).getB() == null) {
             signature = ByteBuffer.allocate(0);
         } else {
-            signature = internalAttributeValueMap.get(signatureFieldName).getB().asReadOnlyBuffer();
+            signature = internalAttributeValueMap.get(encryptionConfiguration.getSignatureFieldName()).getB().asReadOnlyBuffer();
         }
-        internalAttributeValueMap.remove(signatureFieldName);
+        internalAttributeValueMap.remove(encryptionConfiguration.getSignatureFieldName());
 
         String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
         signer.verifySignature(internalAttributeValueMap, attributeFlags, associatedData.getBytes(UTF8),
                 materials.getVerificationKey(), signature);
-        internalAttributeValueMap.remove(materialDescriptionFieldName);
+        internalAttributeValueMap.remove(encryptionConfiguration.getMaterialDescriptionFieldName());
 
         actualDecryption(internalAttributeValueMap, attributeFlags, decryptionKey, materialDescription);
         return internalAttributeValueTranslator.convertFromInternal(internalAttributeValueMap);
@@ -336,7 +325,7 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         }
         if (!materialDescription.isEmpty()) {
             InternalAttributeValue internalAttributeValue = marshallDescription(materialDescription);
-            internalAttributeValueMap.put(materialDescriptionFieldName, internalAttributeValue);
+            internalAttributeValueMap.put(encryptionConfiguration.getMaterialDescriptionFieldName(), internalAttributeValue);
         }
 
         String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
@@ -345,7 +334,7 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
 
         InternalAttributeValue signatureAttribute = new InternalAttributeValue();
         signatureAttribute.setB(ByteBuffer.wrap(signature));
-        internalAttributeValueMap.put(signatureFieldName, signatureAttribute);
+        internalAttributeValueMap.put(encryptionConfiguration.getSignatureFieldName(), signatureAttribute);
 
         return internalAttributeValueTranslator.convertFromInternal(internalAttributeValueMap);
     }
@@ -386,7 +375,7 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         }
     }
 
-    protected static int getBlockSize(final String encryptionMode) {
+    public static int getBlockSize(final String encryptionMode) {
         return BLOCK_SIZE_CACHE.computeIfAbsent(encryptionMode, BLOCK_SIZE_CALCULATOR);
     }
 
@@ -448,46 +437,6 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
                 entry.setValue(internalAttributeValue);
             }
         }
-    }
-    
-    /**
-     * Get the name of the DynamoDB field used to store the signature.
-     * Defaults to {@link #DEFAULT_SIGNATURE_FIELD}.
-     *
-     * @return the name of the DynamoDB field used to store the signature
-     */
-    public String getSignatureFieldName() {
-        return signatureFieldName;
-    }
-
-    /**
-     * Set the name of the DynamoDB field used to store the signature.
-     *
-     * @param signatureFieldName
-     */
-    public void setSignatureFieldName(final String signatureFieldName) {
-        this.signatureFieldName = signatureFieldName;
-    }
-
-    /**
-     * Get the name of the DynamoDB field used to store metadata used by the
-     * DynamoDBEncryptedMapper. Defaults to {@link #DEFAULT_METADATA_FIELD}.
-     *
-     * @return the name of the DynamoDB field used to store metadata used by the
-     *         DynamoDBEncryptedMapper
-     */
-    public String getMaterialDescriptionFieldName() {
-        return materialDescriptionFieldName;
-    }
-
-    /**
-     * Set the name of the DynamoDB field used to store metadata used by the
-     * DynamoDBEncryptedMapper
-     *
-     * @param materialDescriptionFieldName
-     */
-    public void setMaterialDescriptionFieldName(final String materialDescriptionFieldName) {
-        this.materialDescriptionFieldName = materialDescriptionFieldName;
     }
     
     /**
