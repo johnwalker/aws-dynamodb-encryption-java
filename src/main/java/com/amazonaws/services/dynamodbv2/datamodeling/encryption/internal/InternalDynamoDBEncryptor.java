@@ -53,9 +53,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
  * 
  * @author Greg Rubin 
  */
-public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T, V>,
+public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T, V>,
         V extends InternalEncryptionContext.Builder<T, U, V>> {
-    // TODO: Changing these to protected is a disaster waiting to happen. We'll come back to these soon
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final String DEFAULT_METADATA_FIELD = "*amzn-ddb-map-desc*";
     private static final String DEFAULT_SIGNATURE_FIELD = "*amzn-ddb-map-sig*";
@@ -74,6 +73,7 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
 
     private static final int CURRENT_VERSION = 0;
     private final Function<U, V> encryptionContextBuilderSupplier;
+    private final DescriptionMarshaller descriptionMarshaller;
 
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
@@ -86,16 +86,18 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
     
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = DEFAULT_DESCRIPTION_BASE + "signingAlg";
     
-    protected InternalDynamoDBEncryptor(InternalEncryptionMaterialsProvider<U> provider,
-                                        String descriptionBase,
-                                        Function<U, V> encryptionContextBuilderSupplier,
-                                        InternalAttributeValueTranslator<T> internalAttributeValueTranslator) {
+    public InternalDynamoDBEncryptor(InternalEncryptionMaterialsProvider<U> provider,
+                                     String descriptionBase,
+                                     Function<U, V> encryptionContextBuilderSupplier,
+                                     InternalAttributeValueTranslator<T> internalAttributeValueTranslator,
+                                     DescriptionMarshaller descriptionMarshaller) {
         this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
         this.internalAttributeValueTranslator = internalAttributeValueTranslator;
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         this.encryptionContextBuilderSupplier = encryptionContextBuilderSupplier;
+        this.descriptionMarshaller = descriptionMarshaller;
     }
 
     /**
@@ -496,27 +498,11 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
      * @return the description encoded as an AttributeValue with a ByteBuffer value
      * @see java.io.DataOutput#writeUTF(String)
      */
-    protected static InternalAttributeValue marshallDescription(Map<String, String> description) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(bos);
-            out.writeInt(CURRENT_VERSION);
-            for (Map.Entry<String, String> entry : description.entrySet()) {
-                byte[] bytes = entry.getKey().getBytes(UTF8);
-                out.writeInt(bytes.length);
-                out.write(bytes);
-                bytes = entry.getValue().getBytes(UTF8);
-                out.writeInt(bytes.length);
-                out.write(bytes);
-            }
-            out.close();
-            InternalAttributeValue result = new InternalAttributeValue();
-            result.setB(ByteBuffer.wrap(bos.toByteArray()));
-            return result;
-        } catch (IOException ex) {
-            // Due to the objects in use, an IOException is not possible.
-            throw new RuntimeException("Unexpected exception", ex);
-        }
+    private InternalAttributeValue marshallDescription(Map<String, String> description) {
+        byte[] bytes = descriptionMarshaller.marshallDescription(description);
+        InternalAttributeValue internalAttributeValue = new InternalAttributeValue();
+        internalAttributeValue.setB(ByteBuffer.wrap(bytes));
+        return internalAttributeValue;
     }
 
     public String getSigningAlgorithmHeader() {
@@ -525,43 +511,7 @@ public abstract class InternalDynamoDBEncryptor<T, U extends InternalEncryptionC
     /**
      * @see #marshallDescription(Map)
      */
-    protected static Map<String, String> unmarshallDescription(InternalAttributeValue attributeValue) {
-        attributeValue.getB().mark();
-        try (DataInputStream in = new DataInputStream(
-                    new ByteBufferInputStream(attributeValue.getB())) ) {
-            Map<String, String> result = new HashMap<String, String>();
-            int version = in.readInt();
-            if (version != CURRENT_VERSION) {
-                throw new IllegalArgumentException("Unsupported description version");
-            }
-
-            String key, value;
-            int keyLength, valueLength;
-            try {
-                while(in.available() > 0) {
-                    keyLength = in.readInt();
-                    byte[] bytes = new byte[keyLength];
-                    if (in.read(bytes) != keyLength) {
-                        throw new IllegalArgumentException("Malformed description");
-                    }
-                    key = new String(bytes, UTF8);
-                    valueLength = in.readInt();
-                    bytes = new byte[valueLength];
-                    if (in.read(bytes) != valueLength) {
-                        throw new IllegalArgumentException("Malformed description");
-                    }
-                    value = new String(bytes, UTF8);
-                    result.put(key, value);
-                }
-            } catch (EOFException eof) {
-                throw new IllegalArgumentException("Malformed description", eof);
-            }
-            return result;
-        } catch (IOException ex) {
-            // Due to the objects in use, an IOException is not possible.
-            throw new RuntimeException("Unexpected exception", ex);
-        } finally {
-            attributeValue.getB().reset();
-        }
+    private Map<String, String> unmarshallDescription(InternalAttributeValue attributeValue) {
+        return descriptionMarshaller.unmarshallDescription(attributeValue.getB());
     }
 }

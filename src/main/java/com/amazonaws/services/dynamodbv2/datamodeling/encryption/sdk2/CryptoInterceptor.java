@@ -80,6 +80,6 @@ public class CryptoInterceptor implements ExecutionInterceptor {
         if (sdkRequest instanceof PutItemRequest) {
             return ((PutItemRequest) sdkRequest).tableName();
         }
-
+        return null;
     }
 }
