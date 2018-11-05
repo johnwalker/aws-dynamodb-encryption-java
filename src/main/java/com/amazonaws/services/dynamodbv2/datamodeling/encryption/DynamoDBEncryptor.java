@@ -14,30 +14,13 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
@@ -45,6 +28,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalDynamoDBEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.util.CollectionUtils;
 
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_METADATA_FIELD;
@@ -197,7 +181,17 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
+        Map<String, AttributeValue> decryptedAttributeValueMap = internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
+
+        // For backwards compatibility: copy the original unencrypted attributes back into the result
+//        for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
+//            Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
+//            if (flags == null || !flags.contains(EncryptionFlags.ENCRYPT)) {
+//                decryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
+//            }
+//        }
+        return decryptedAttributeValueMap;
+
     }
 
     /**
@@ -219,7 +213,18 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
+        Map<String, AttributeValue> encryptedAttributeValueMap = internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
+
+        if (!attributeFlags.isEmpty()) {
+            // For backwards compatibility: copy the original unencrypted attributes back into the result
+            for (Map.Entry<String, AttributeValue> entry : itemAttributes.entrySet()) {
+                Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
+                if (flags == null || !flags.contains(EncryptionFlags.ENCRYPT)) {
+                    encryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return encryptedAttributeValueMap;
     }
 
     protected static int getBlockSize(final String encryptionMode) {

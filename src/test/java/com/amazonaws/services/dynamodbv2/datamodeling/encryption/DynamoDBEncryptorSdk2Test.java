@@ -170,12 +170,12 @@ public class DynamoDBEncryptorSdk2Test {
 
     }
 
-    @Test
-    public void testSetSignatureFieldName() {
-        assertNotNull(encryptor.getSignatureFieldName());
-        encryptor.setSignatureFieldName("A different value");
-        assertEquals("A different value", encryptor.getSignatureFieldName());
-    }
+//    @Test
+//    public void testSetSignatureFieldName() {
+//        assertNotNull(encryptor.getSignatureFieldName());
+//        encryptor.setSignatureFieldName("A different value");
+//        assertEquals("A different value", encryptor.getSignatureFieldName());
+//    }
     private static final class InstrumentedEncryptionMaterialsProvider implements EncryptionMaterialsProviderSdk2 {
         private final EncryptionMaterialsProviderSdk2 delegate;
         private final ConcurrentHashMap<String, AtomicInteger> calls = new ConcurrentHashMap<>();

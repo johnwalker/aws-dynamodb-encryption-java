@@ -454,9 +454,6 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         return internalAttributeValue;
     }
 
-    public String getSigningAlgorithmHeader() {
-        return signingAlgorithmHeader;
-    }
     /**
      * @see #marshallDescription(Map)
      */

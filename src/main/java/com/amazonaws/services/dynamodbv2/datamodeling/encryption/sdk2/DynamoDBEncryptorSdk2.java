@@ -1,16 +1,18 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DefaultDynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalDynamoDBEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
+import com.fasterxml.jackson.jr.ob.impl.MapBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBEncryptorSdk2 extends InternalDynamoDBEncryptor<AttributeValue, EncryptionContextSDK2, EncryptionContextSDK2.Builder> {
     protected DynamoDBEncryptorSdk2(EncryptionMaterialsProviderSdk2 provider, String descriptionBase) {
         super(provider, descriptionBase,
                 (EncryptionContextSDK2 encryptionContextSDK2) -> new EncryptionContextSDK2.Builder(encryptionContextSDK2),
-                new InternalAttributeValueTranslatorSdk2(), new DescriptionMarshaller(), null);
+                new InternalAttributeValueTranslatorSdk2(), new DescriptionMarshaller(), new DefaultDynamoDBEncryptionConfiguration());
     }
 
     public static DynamoDBEncryptorSdk2 getInstance(EncryptionMaterialsProviderSdk2 provider, String descriptionbase) {
