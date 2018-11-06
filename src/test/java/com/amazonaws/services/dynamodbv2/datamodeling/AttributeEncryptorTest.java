@@ -298,12 +298,15 @@ public class AttributeEncryptorTest {
         assertAttrEquals(attribs.get("intValue"), encryptedAttributes.get("intValue"));
 
         // intValue is not signed, make sure we can modify it and still decrypt
-        encryptedAttributes.get("intValue").setN("666");
+        encryptedAttributes.put("intValue", new AttributeValue().withN("666"));
+        Map<String, AttributeValue> expectedAttribs = new HashMap<>(attribs);
+        expectedAttribs.put("intValue", new AttributeValue().withN("666"));
 
         params = FakeParameters.getInstance(Mixed.class, encryptedAttributes, null, TABLE_NAME,
                 HASH_KEY, RANGE_KEY);
         decryptedAttributes = encryptor.untransform(params);
-        assertThat(decryptedAttributes, AttrMatcher.match(attribs));
+
+        assertThat(decryptedAttributes, AttrMatcher.match(expectedAttribs));
     }
 
     @Test(expected = DynamoDBMappingException.class)

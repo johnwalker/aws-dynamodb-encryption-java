@@ -182,21 +182,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        Map<String, AttributeValue> decryptedAttributeValueMap = internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
-
-        // For backwards compatibility: copy the original unencrypted attributes back into the result
-        if (!attributeFlags.isEmpty()) {
-            for (Map.Entry<String, AttributeValue> entry: itemAttributes.entrySet()) {
-                Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
-                if (!StringUtils.equals(entry.getKey(), getMaterialDescriptionFieldName())
-                        && !StringUtils.equals(entry.getKey(), getSignatureFieldName())
-                        && (flags == null || !flags.contains(EncryptionFlags.ENCRYPT))){
-                    decryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        return decryptedAttributeValueMap;
-
+        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
     }
 
     /**
@@ -218,18 +204,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        Map<String, AttributeValue> encryptedAttributeValueMap = internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
-
-        if (!attributeFlags.isEmpty()) {
-            // For backwards compatibility: copy the original unencrypted attributes back into the result
-            for (Map.Entry<String, AttributeValue> entry : itemAttributes.entrySet()) {
-                Set<EncryptionFlags> flags = attributeFlags.get(entry.getKey());
-                if (flags == null || !flags.contains(EncryptionFlags.ENCRYPT)) {
-                    encryptedAttributeValueMap.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        return encryptedAttributeValueMap;
+        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
     }
 
     protected static int getBlockSize(final String encryptionMode) {
