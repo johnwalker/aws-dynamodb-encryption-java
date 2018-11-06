@@ -1,3 +1,17 @@
+/*
+ * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.ByteBufferInputStream;
@@ -13,18 +27,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The API used for marshalling material descriptions maps to and from bytes.
+ *
+ **/
 public class DescriptionMarshaller {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
-    private static final int CURRENT_DESCRIPTION_MARSHALLER_VERSION = 0;
-    final int descriptionMarshallerVersion;
+    private static final int DYNAMODB_ENCRYPTION_FORMAT_VERSION = 0;
+
+    final int dynamoDBEncryptionFormatVersion;
 
     public DescriptionMarshaller() {
-        this.descriptionMarshallerVersion = CURRENT_DESCRIPTION_MARSHALLER_VERSION;
-
+        this(DYNAMODB_ENCRYPTION_FORMAT_VERSION);
     }
 
-    public DescriptionMarshaller(int descriptionMarshallerVersion) {
-        this.descriptionMarshallerVersion = descriptionMarshallerVersion;
+    public DescriptionMarshaller(int dynamoDBEncryptionFormatVersion) {
+        this.dynamoDBEncryptionFormatVersion = dynamoDBEncryptionFormatVersion;
     }
 
     /**
@@ -39,7 +57,7 @@ public class DescriptionMarshaller {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(bos);
-            out.writeInt(descriptionMarshallerVersion);
+            out.writeInt(getDynamoDBEncryptionFormatVersion());
             for (Map.Entry<String, String> entry : description.entrySet()) {
                 byte[] bytes = entry.getKey().getBytes(UTF8);
                 out.writeInt(bytes.length);
@@ -65,7 +83,7 @@ public class DescriptionMarshaller {
                 new ByteBufferInputStream(byteBuffer)) ) {
             Map<String, String> result = new HashMap<String, String>();
             int version = in.readInt();
-            if (version != this.descriptionMarshallerVersion) {
+            if (version != getDynamoDBEncryptionFormatVersion()) {
                 throw new IllegalArgumentException("Unsupported description version");
             }
 
@@ -99,4 +117,7 @@ public class DescriptionMarshaller {
         }
     }
 
+    public int getDynamoDBEncryptionFormatVersion() {
+        return this.dynamoDBEncryptionFormatVersion;
+    }
 }
