@@ -35,9 +35,11 @@ public class CryptoInterceptor implements ExecutionInterceptor {
                 Map<String, AttributeValue> encryptedAttributes = encryptorSdk2.encryptRecord(
                         putRequest.item(),
                         attributeEncryptionFlags,
-                        new EncryptionContextBuilders.SDK2Builders.Builder()
+                        EncryptionContextSDK2.builder()
+                                .withTableName(tableName)
+                                .internalAPI()
                                 .withAttributeValues(putRequest.item())
-                                .withTableName(putRequest.tableName())
+                                .publicAPI()
                                 .build());
                 return putRequest.toBuilder().item(encryptedAttributes).build();
             } catch (GeneralSecurityException e) {
@@ -60,9 +62,10 @@ public class CryptoInterceptor implements ExecutionInterceptor {
                 Map<String, AttributeValue> decryptedAttributes = encryptorSdk2.decryptRecord(
                         getItemResponse.item(),
                         attributeEncryptionFlags,
-                        new EncryptionContextBuilders.SDK2Builders.Builder()
+                        EncryptionContextSDK2.builder()
+                                .internalAPI()
                                 .withAttributeValues(getItemResponse.item())
-                                .build());
+                                .publicAPI().build());
                 return getItemResponse.toBuilder().item(decryptedAttributes).build();
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);

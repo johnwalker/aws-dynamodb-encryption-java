@@ -27,6 +27,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Descri
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk1;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalDynamoDBEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.util.CollectionUtils;
 import software.amazon.awssdk.utils.StringUtils;
@@ -49,7 +50,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
     private final String descriptionBase;
     private final String symmetricEncryptionModeHeader;
     private final String signingAlgorithmHeader;
-    private InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContext.Builder> internalEncryptor;
+    private InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContextBuilders.SDK1Builders.Builder, EncryptionContextBuilders.SDK1Builders.BuilderInternalAPI> internalEncryptor;
     private static DescriptionMarshaller DESCRIPTION_MARSHALLER = new DescriptionMarshaller();
 
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
@@ -60,7 +61,6 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
         internalEncryptor = new InternalDynamoDBEncryptor<>(provider, descriptionBase,
-                (EncryptionContext encryptionContext) -> new EncryptionContext.Builder(encryptionContext),
                 new InternalAttributeValueTranslatorSdk1(), new DescriptionMarshaller(), (DynamoDBEncryptionConfiguration) this);
     }
 

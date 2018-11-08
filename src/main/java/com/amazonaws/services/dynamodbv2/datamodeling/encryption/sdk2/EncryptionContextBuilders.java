@@ -39,25 +39,24 @@ public class EncryptionContextBuilders {
 
         E build();
 
-        interface GenericBuilderInternalAPI<B, P, T> {
-            P withAttributeValues(Map<String, T> attributeValues);
-
+        interface GenericBuilderInternalAPI<B, B2, T> {
+            B2 withAttributeValues(Map<String, T> attributeValues);
             B publicAPI();
         }
     }
 
     public interface GenericEncryptionContext<T, B> {
-        String getTableName(String tableName);
+        String getTableName();
 
-        Class<?> getModeledClass(Class<?> modeledClass);
+        Class<?> getModeledClass();
 
-        Object getDeveloperContext(Object developerContext);
+        Object getDeveloperContext();
 
-        String getHashKeyName(String hashKeyName);
+        String getHashKeyName();
 
-        String getRangeKeyName(String rangeKeyName);
+        String getRangeKeyName();
 
-        Map<String, String> getMaterialDescription(Map<String, String> materialDescription);
+        Map<String, String> getMaterialDescription();
 
         Map<String, T> getAttributeValues();
 

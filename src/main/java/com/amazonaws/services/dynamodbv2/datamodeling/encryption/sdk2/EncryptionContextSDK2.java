@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EncryptionContextSDK2 {
+public class EncryptionContextSDK2 implements EncryptionContextBuilders.GenericEncryptionContext<AttributeValue, EncryptionContextBuilders.SDK2Builders.Builder> {
     private String tableName = null;
     private Map<String, AttributeValue> attributeValues = null;
     private Class<?> modeledClass = null;
@@ -81,7 +81,7 @@ public class EncryptionContextSDK2 {
         return new BuilderImpl(this);
     }
 
-    static EncryptionContextBuilders.SDK2Builders.Builder builder() {
+    public static EncryptionContextBuilders.SDK2Builders.Builder builder() {
         return new BuilderImpl();
     }
 

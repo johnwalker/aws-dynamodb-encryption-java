@@ -42,7 +42,7 @@ import java.util.Map;
  * 
  * @author Greg Rubin 
  */
-public final class EncryptionContext {
+public final class EncryptionContext implements EncryptionContextBuilders.GenericEncryptionContext<AttributeValue, EncryptionContextBuilders.SDK1Builders.Builder> {
     private final String tableName;
     private final Map<String, AttributeValue> attributeValues;
     private final Class<?> modeledClass;
@@ -70,6 +70,7 @@ public final class EncryptionContext {
         this.rangeKeyName = encryptionContextBuilder.rangeKeyName;
         this.materialDescription = encryptionContextBuilder.materialDescription;
     }
+
 
     /**
      * Returns the name of the DynamoDB Table this record is associated with.
@@ -132,6 +133,22 @@ public final class EncryptionContext {
      *             instance of EncryptionContext
      *
      */
+
+    public EncryptionContextBuilders.SDK1Builders.Builder toBuilder() {
+        return new BuilderImpl(this);
+    }
+
+    public static EncryptionContextBuilders.SDK1Builders.Builder builder() {
+        return new BuilderImpl();
+    }
+
+    /**
+     * Builder class for {@link EncryptionContext}.
+     * Mutable objects (other than <code>developerContext</code>) will undergo
+     * a defensive copy prior to being stored in the builder.
+     *
+     * This class is <em>not</em> thread-safe.
+     */
     public static final class Builder {
         private String tableName = null;
         private Map<String, AttributeValue> attributeValues = null;
@@ -167,6 +184,12 @@ public final class EncryptionContext {
 
         public Builder withTableName(String tableName) {
             this.tableName = tableName;
+            return this;
+        }
+
+        public Builder withAttributeValues(Map<String, AttributeValue> attributeValues) {
+            this.attributeValues = Collections.unmodifiableMap(
+                    new HashMap<String, AttributeValue>(attributeValues));
             return this;
         }
 
@@ -222,14 +245,6 @@ public final class EncryptionContext {
 
         public Map<String, String> getMaterialDescription() {
             return materialDescription;
-        }
-
-        public EncryptionContextBuilders.SDK1Builders.BuilderInternalAPI withAttributeValues(Map<String, AttributeValue> attributeValues) {
-            return null;
-        }
-
-        public EncryptionContextBuilders.SDK1Builders.Builder publicAPI() {
-            return null;
         }
     }
 
@@ -305,12 +320,14 @@ public final class EncryptionContext {
 
         @Override
         public EncryptionContextBuilders.SDK1Builders.BuilderInternalAPI withAttributeValues(Map<String, AttributeValue> attributeValues) {
-            return null;
+            this.attributeValues = Collections.unmodifiableMap(
+                    new HashMap<String, AttributeValue>(attributeValues));
+            return this;
         }
 
         @Override
         public EncryptionContextBuilders.SDK1Builders.Builder publicAPI() {
-            return null;
+            return this;
         }
     }
 

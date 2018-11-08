@@ -243,12 +243,15 @@ public class AttributeEncryptor implements AttributeTransformer {
         final TableAadOverride override = clazz.getAnnotation(TableAadOverride.class);
         final String tableName = ((override == null) ? params.getTableName() : override.tableName());
 
-        return new EncryptionContext.Builder()
+        return EncryptionContext.builder()
                 .withHashKeyName(params.getHashKeyName())
                 .withRangeKeyName(params.getRangeKeyName())
                 .withTableName(tableName)
                 .withModeledClass(params.getModelClass())
-                .withAttributeValues(params.getAttributeValues()).build();
+                .internalAPI()
+                .withAttributeValues(params.getAttributeValues())
+                .publicAPI()
+                .build();
     }
 
     private boolean handleUnknownAttributes(Class<?> clazz) {

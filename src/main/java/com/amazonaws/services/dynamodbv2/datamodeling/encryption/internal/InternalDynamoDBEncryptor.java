@@ -39,7 +39,9 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncrypt
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 /**
  * The low-level API used by {@link AttributeEncryptor} to perform crypto
@@ -47,8 +49,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
  * 
  * @author Greg Rubin 
  */
-public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T, V>,
-        V extends InternalEncryptionContext.Builder<T, U, V>> {
+public class InternalDynamoDBEncryptor<T,
+        U extends EncryptionContextBuilders.GenericEncryptionContext<T, V>,
+        V extends EncryptionContextBuilders.GenericBuilder<V, U, W>,
+        W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     protected static final String DEFAULT_DESCRIPTION_BASE = "amzn-ddb-map-"; // Same as the Mapper
     private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -63,7 +67,6 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         }
     };
 
-    private final Function<U, V> encryptionContextBuilderSupplier;
     private final DescriptionMarshaller descriptionMarshaller;
 
     private InternalEncryptionMaterialsProvider<U> encryptionMaterialsProvider;
@@ -75,7 +78,6 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
 
     public InternalDynamoDBEncryptor(InternalEncryptionMaterialsProvider<U> provider,
                                      String descriptionBase,
-                                     Function<U, V> encryptionContextBuilderSupplier,
                                      InternalAttributeValueTranslator<T> internalAttributeValueTranslator,
                                      DescriptionMarshaller descriptionMarshaller,
                                      DynamoDBEncryptionConfiguration encryptionConfiguration) {
@@ -85,7 +87,6 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         this.encryptionConfiguration = encryptionConfiguration;
         symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
         signingAlgorithmHeader = this.descriptionBase + "signingAlg";
-        this.encryptionContextBuilderSupplier = encryptionContextBuilderSupplier;
         this.descriptionMarshaller = descriptionMarshaller;
     }
 
@@ -242,10 +243,12 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
             materialDescription = unmarshallDescription(internalAttributeValueMap.get(encryptionConfiguration.getMaterialDescriptionFieldName()));
         }
         // Copy the material description and attribute values into the context
-        context = encryptionContextBuilderSupplier.apply(context)
-            .withMaterialDescription(materialDescription)
-            .withAttributeValues(itemAttributes)
-            .build();
+        context = context.toBuilder()
+                .withMaterialDescription(materialDescription)
+                .internalAPI()
+                .withAttributeValues(itemAttributes)
+                .publicAPI()
+                .build();
 
         materials = encryptionMaterialsProvider.getDecryptionMaterials(context);
         decryptionKey = materials.getDecryptionKey();
@@ -297,10 +300,8 @@ public class InternalDynamoDBEncryptor<T, U extends InternalEncryptionContext<T,
         itemAttributes = new HashMap<String, T>(itemAttributes);
 
         // Copy the attribute values into the context
-        context = encryptionContextBuilderSupplier.apply(context)
-            .withAttributeValues(itemAttributes)
-            .build();
-        
+        context = context.toBuilder().internalAPI().withAttributeValues(itemAttributes).publicAPI().build();
+
         EncryptionMaterials materials = encryptionMaterialsProvider.getEncryptionMaterials(context);
         // We need to copy this because we modify it to record other encryption details
         Map<String, String> materialDescription = new HashMap<String, String>(

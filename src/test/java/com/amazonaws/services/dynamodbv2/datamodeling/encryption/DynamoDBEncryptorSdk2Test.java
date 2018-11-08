@@ -81,7 +81,7 @@ public class DynamoDBEncryptorSdk2Test {
         attribs.put("rangeKey", AttributeValue.builder().n("7").build());
         attribs.put("version", AttributeValue.builder().n("0").build());
 
-        context = new EncryptionContextBuilders.SDK2Builders.Builder()
+        context = EncryptionContextSDK2.builder()
                 .withTableName("TableName")
                 .withHashKeyName("hashKey")
                 .withRangeKeyName("rangeKey")
