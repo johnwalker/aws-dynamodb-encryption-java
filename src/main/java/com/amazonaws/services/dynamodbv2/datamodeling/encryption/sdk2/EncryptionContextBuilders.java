@@ -10,7 +10,7 @@ public class EncryptionContextBuilders {
         interface Builder extends GenericBuilder<Builder, EncryptionContext, SDK1Builders.BuilderInternalAPI> {
         }
 
-        interface BuilderInternalAPI extends GenericBuilder.GenericBuilderInternalAPI<Builder, BuilderInternalAPI, AttributeValue> {
+        interface BuilderInternalAPI extends GenericBuilder.GenericBuilderInternalAPI<Builder, BuilderInternalAPI, com.amazonaws.services.dynamodbv2.model.AttributeValue> {
         }
     }
 
@@ -44,5 +44,23 @@ public class EncryptionContextBuilders {
 
             B publicAPI();
         }
+    }
+
+    public interface GenericEncryptionContext<T, B> {
+        String getTableName(String tableName);
+
+        Class<?> getModeledClass(Class<?> modeledClass);
+
+        Object getDeveloperContext(Object developerContext);
+
+        String getHashKeyName(String hashKeyName);
+
+        String getRangeKeyName(String rangeKeyName);
+
+        Map<String, String> getMaterialDescription(Map<String, String> materialDescription);
+
+        Map<String, T> getAttributeValues();
+
+        B toBuilder();
     }
 }
