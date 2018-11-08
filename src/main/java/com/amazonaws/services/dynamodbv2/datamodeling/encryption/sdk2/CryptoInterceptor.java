@@ -7,7 +7,6 @@ import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
@@ -36,7 +35,7 @@ public class CryptoInterceptor implements ExecutionInterceptor {
                 Map<String, AttributeValue> encryptedAttributes = encryptorSdk2.encryptRecord(
                         putRequest.item(),
                         attributeEncryptionFlags,
-                        new EncryptionContextSDK2.Builder()
+                        new EncryptionContextBuilders.SDK2Builders.Builder()
                                 .withAttributeValues(putRequest.item())
                                 .withTableName(putRequest.tableName())
                                 .build());
@@ -61,7 +60,7 @@ public class CryptoInterceptor implements ExecutionInterceptor {
                 Map<String, AttributeValue> decryptedAttributes = encryptorSdk2.decryptRecord(
                         getItemResponse.item(),
                         attributeEncryptionFlags,
-                        new EncryptionContextSDK2.Builder()
+                        new EncryptionContextBuilders.SDK2Builders.Builder()
                                 .withAttributeValues(getItemResponse.item())
                                 .build());
                 return getItemResponse.toBuilder().item(decryptedAttributes).build();

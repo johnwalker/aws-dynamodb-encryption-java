@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.SymmetricStaticProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.CryptoInterceptor;
@@ -81,7 +81,7 @@ public class DynamoDBEncryptorSdk2Test {
         attribs.put("rangeKey", AttributeValue.builder().n("7").build());
         attribs.put("version", AttributeValue.builder().n("0").build());
 
-        context = new EncryptionContextSDK2.Builder()
+        context = new EncryptionContextBuilders.SDK2Builders.Builder()
                 .withTableName("TableName")
                 .withHashKeyName("hashKey")
                 .withRangeKeyName("rangeKey")
