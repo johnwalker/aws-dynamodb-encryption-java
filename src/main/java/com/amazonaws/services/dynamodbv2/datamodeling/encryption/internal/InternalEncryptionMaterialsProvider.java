@@ -14,7 +14,7 @@ public interface InternalEncryptionMaterialsProvider<T> {
      * @return
      *      The encryption materials that match the description, or null if no matching encryption materials found.
      */
-    public DecryptionMaterials getDecryptionMaterials(T context);
+    DecryptionMaterials getDecryptionMaterials(T context);
 
     /**
      * Returns EncryptionMaterials which the caller can use for encryption.
@@ -31,7 +31,7 @@ public interface InternalEncryptionMaterialsProvider<T> {
      * @return EncryptionMaterials which the caller can use to encrypt or
      * decrypt data.
      */
-    public EncryptionMaterials getEncryptionMaterials(T context);
+    EncryptionMaterials getEncryptionMaterials(T context);
 
     /**
      * Forces this encryption materials provider to refresh its encryption
@@ -42,5 +42,5 @@ public interface InternalEncryptionMaterialsProvider<T> {
      * throughout their lifetime, this method should force the encryption
      * materials provider to refresh its encryption material.
      */
-    public void refresh();
+    void refresh();
 }
