@@ -42,7 +42,7 @@ import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.Encrypti
  *
  * @author Greg Rubin
  */
-public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
+public class DynamoDBEncryptor implements DynamoDBEncryptionConfigurationSDK1 {
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
 
@@ -53,6 +53,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
     private static DescriptionMarshaller DESCRIPTION_MARSHALLER = new DescriptionMarshaller();
 
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
+    private Transformer<EncryptionContext> encryptionContextTransformer;
 
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
         this.descriptionBase = descriptionBase;
@@ -286,6 +287,16 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
         this.descriptionBase = descriptionBase;
         this.signingAlgorithmHeader = descriptionBase + HELPER_CONSTANT_SIGNING_ALG;
         this.symmetricEncryptionModeHeader = descriptionBase + HELPER_CONSTANT_SYM_MODE;
+    }
+
+    @Override
+    public void setEncryptionContextTransformer(Transformer<EncryptionContext> encryptionContextTransformer) {
+        this.encryptionContextTransformer = encryptionContextTransformer;
+    }
+
+    @Override
+    public Transformer<EncryptionContext> getEncryptionContextTransformer(Transformer<EncryptionContext> encryptionContextTransformer) {
+        return encryptionContextTransformer;
     }
 
     /**

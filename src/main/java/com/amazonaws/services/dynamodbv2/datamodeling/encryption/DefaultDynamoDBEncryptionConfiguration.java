@@ -1,12 +1,15 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
-public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptionConfiguration {
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
+
+public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptionConfigurationSDK2 {
 
     private String symModeHeader;
     private String signatureFieldName;
     private String materialDescriptionFieldName;
     private String signingAlgorithmHeader;
     private String descriptionBase;
+    private Transformer<EncryptionContextSDK2> encryptionContextTransformer;
 
     public DefaultDynamoDBEncryptionConfiguration() {
         this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
@@ -24,7 +27,6 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
     @Override
     public void setSignatureFieldName(String signatureFieldName) {
         this.signatureFieldName = signatureFieldName;
-
     }
 
     @Override
@@ -59,4 +61,14 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
     }
 
+    @Override
+    public void setEncryptionContextTransformer(Transformer<EncryptionContextSDK2> encryptionContextTransformer) {
+        this.encryptionContextTransformer = encryptionContextTransformer;
+
+    }
+
+    @Override
+    public Transformer<EncryptionContextSDK2> getEncryptionContextTransformer(Transformer<EncryptionContextSDK2> encryptionContextTransformer) {
+        return encryptionContextTransformer;
+    }
 }
