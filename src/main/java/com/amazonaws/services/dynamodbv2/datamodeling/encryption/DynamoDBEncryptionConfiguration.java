@@ -1,6 +1,8 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
-public interface DynamoDBEncryptionConfiguration<T> {
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
+
+public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
     /**
      * Get the name of the DynamoDB field used to store the signature.
      * Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
@@ -57,5 +59,7 @@ public interface DynamoDBEncryptionConfiguration<T> {
 
     Transformer<T> getEncryptionContextTransformer();
 
+    void setEncryptionMaterialsProvider(final U encryptionMaterialsProvider);
 
+    U getEncryptionMaterialsProvider();
 }

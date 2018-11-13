@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class EncryptionContextBuilders {
     public interface SDK1Builders {
-        interface Builder extends GenericBuilder<Builder, EncryptionContext, SDK1Builders.BuilderInternalAPI> {
+        interface Builder extends GenericBuilder<Builder, SDK1Builders.BuilderInternalAPI, EncryptionContext> {
         }
 
         interface BuilderInternalAPI extends GenericBuilder.GenericBuilderInternalAPI<Builder, BuilderInternalAPI, com.amazonaws.services.dynamodbv2.model.AttributeValue> {
@@ -15,14 +15,14 @@ public class EncryptionContextBuilders {
     }
 
     public interface SDK2Builders {
-        interface Builder extends GenericBuilder<Builder, EncryptionContextSDK2, SDK2Builders.BuilderInternalAPI> {
+        interface Builder extends GenericBuilder<Builder, SDK2Builders.BuilderInternalAPI, EncryptionContextSDK2> {
         }
 
         interface BuilderInternalAPI extends GenericBuilder.GenericBuilderInternalAPI<Builder, BuilderInternalAPI, AttributeValue> {
         }
     }
 
-    public interface GenericBuilder<B, E, B2 extends GenericBuilder.GenericBuilderInternalAPI<B, ?, ?>> {
+    public interface GenericBuilder<B, B2 extends GenericBuilder.GenericBuilderInternalAPI<B, ?, ?>, E> {
         B withTableName(String tableName);
 
         B withModeledClass(Class<?> modeledClass);

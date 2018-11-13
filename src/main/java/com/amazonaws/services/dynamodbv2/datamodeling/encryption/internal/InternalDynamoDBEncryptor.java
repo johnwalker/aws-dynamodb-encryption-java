@@ -52,7 +52,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
  */
 public class InternalDynamoDBEncryptor<T,
         U extends EncryptionContextBuilders.GenericEncryptionContext<T, V>,
-        V extends EncryptionContextBuilders.GenericBuilder<V, U, W>,
+        V extends EncryptionContextBuilders.GenericBuilder<V, W, U>,
         W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -310,7 +310,9 @@ public class InternalDynamoDBEncryptor<T,
         }
 
 
-        context = encryptionConfiguration.getEncryptionContextTransformer().transform(context);
+        if (encryptionConfiguration.getEncryptionContextTransformer() != null) {
+            context = encryptionConfiguration.getEncryptionContextTransformer().transform(context);
+        }
 
         EncryptionMaterials materials = encryptionMaterialsProvider.getEncryptionMaterials(context);
         // We need to copy this because we modify it to record other encryption details
