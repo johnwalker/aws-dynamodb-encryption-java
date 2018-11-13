@@ -29,12 +29,12 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.util.CollectionUtils;
-import software.amazon.awssdk.utils.StringUtils;
 
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_METADATA_FIELD;
 import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
+import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
+import static com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
 
 /**
  * The low-level API used by {@link AttributeEncryptor} to perform crypto
@@ -46,22 +46,21 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
     private String signatureFieldName = DEFAULT_SIGNATURE_FIELD;
     private String materialDescriptionFieldName = DEFAULT_METADATA_FIELD;
 
-    private EncryptionMaterialsProvider encryptionMaterialsProvider;
-    private final String descriptionBase;
-    private final String symmetricEncryptionModeHeader;
-    private final String signingAlgorithmHeader;
+    private String descriptionBase;
+    private String symmetricEncryptionModeHeader;
+    private String signingAlgorithmHeader;
     private InternalDynamoDBEncryptor<AttributeValue, EncryptionContext, EncryptionContextBuilders.SDK1Builders.Builder, EncryptionContextBuilders.SDK1Builders.BuilderInternalAPI> internalEncryptor;
     private static DescriptionMarshaller DESCRIPTION_MARSHALLER = new DescriptionMarshaller();
 
     public static final String DEFAULT_SIGNING_ALGORITHM_HEADER = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
 
     protected DynamoDBEncryptor(EncryptionMaterialsProvider provider, String descriptionBase) {
-        this.encryptionMaterialsProvider = provider;
         this.descriptionBase = descriptionBase;
-        symmetricEncryptionModeHeader = this.descriptionBase + "sym-mode";
-        signingAlgorithmHeader = this.descriptionBase + "signingAlg";
-        internalEncryptor = new InternalDynamoDBEncryptor<>(provider, descriptionBase,
-                new InternalAttributeValueTranslatorSdk1(), new DescriptionMarshaller(), (DynamoDBEncryptionConfiguration) this);
+        symmetricEncryptionModeHeader = this.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
+        signingAlgorithmHeader = this.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
+        internalEncryptor = new InternalDynamoDBEncryptor<>(provider,
+                new InternalAttributeValueTranslatorSdk1(),
+                new DescriptionMarshaller());
     }
 
     public static DynamoDBEncryptor getInstance(EncryptionMaterialsProvider provider, String descriptionbase) {
@@ -126,7 +125,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotDecrypt) {
-        return internalEncryptor.allDecryptionFlagsExcept(itemAttributes, doNotDecrypt);
+        return internalEncryptor.allDecryptionFlagsExcept(itemAttributes, this, doNotDecrypt);
     }
 
     /**
@@ -182,7 +181,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context);
+        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context, this);
     }
 
     /**
@@ -204,7 +203,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context);
+        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context, this);
     }
 
     protected static int getBlockSize(final String encryptionMode) {
@@ -267,9 +266,28 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfiguration {
         return result;
     }
 
+    @Override
     public String getSigningAlgorithmHeader() {
         return signingAlgorithmHeader;
     }
+
+    @Override
+    public String getSymModeHeader() {
+        return symmetricEncryptionModeHeader;
+    }
+
+    @Override
+    public String getDescriptionBase() {
+        return descriptionBase;
+    }
+
+    @Override
+    public void setDescriptionBase(String descriptionBase) {
+        this.descriptionBase = descriptionBase;
+        this.signingAlgorithmHeader = descriptionBase + HELPER_CONSTANT_SIGNING_ALG;
+        this.symmetricEncryptionModeHeader = descriptionBase + HELPER_CONSTANT_SYM_MODE;
+    }
+
     /**
      * @see #marshallDescription(Map)
      */
