@@ -295,7 +295,7 @@ public class DynamoDBEncryptor implements DynamoDBEncryptionConfigurationSDK1 {
     }
 
     @Override
-    public Transformer<EncryptionContext> getEncryptionContextTransformer(Transformer<EncryptionContext> encryptionContextTransformer) {
+    public Transformer<EncryptionContext> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
     }
 

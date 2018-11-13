@@ -17,6 +17,7 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
         this.symModeHeader = EncryptionConstants.DEFAULT_SYM_MODE_HEADER;
         this.descriptionBase = EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
+        this.encryptionContextTransformer = null;
     }
 
     @Override
@@ -68,7 +69,7 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
     }
 
     @Override
-    public Transformer<EncryptionContextSDK2> getEncryptionContextTransformer(Transformer<EncryptionContextSDK2> encryptionContextTransformer) {
+    public Transformer<EncryptionContextSDK2> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
     }
 }

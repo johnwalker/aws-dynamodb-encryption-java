@@ -55,7 +55,7 @@ public interface DynamoDBEncryptionConfiguration<T> {
 
     void setEncryptionContextTransformer(Transformer<T> encryptionContextTransformer);
 
-    Transformer<T> getEncryptionContextTransformer(Transformer<T> encryptionContextTransformer);
+    Transformer<T> getEncryptionContextTransformer();
 
 
 }
