@@ -3,10 +3,12 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 
 class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfigurationSDK1 {
+    // Not set directly, but modified by changing descriptionBase
     private String symModeHeader;
+    private String signingAlgorithmHeader;
+
     private String signatureFieldName;
     private String materialDescriptionFieldName;
-    private String signingAlgorithmHeader;
     private String descriptionBase;
     private Transformer<EncryptionContext> encryptionContextTransformer;
     private EncryptionMaterialsProvider encryptionMaterialsProviderSdk2;

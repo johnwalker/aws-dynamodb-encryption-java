@@ -89,6 +89,16 @@ public class DynamoDBEncryptor {
         return decryptAllFieldsExcept(itemAttributes, context, Arrays.asList(doNotDecrypt));
     }
 
+    public Map<String, AttributeValue> decryptAllFieldsExcept(
+            Map<String, AttributeValue> itemAttributes,
+            EncryptionContext context, Collection<String> doNotDecrypt,
+            DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration)
+            throws GeneralSecurityException {
+        Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
+                itemAttributes, doNotDecrypt);
+        return decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+    }
+
     /**
      * @see #decryptAllFieldsExcept(Map, EncryptionContext, String...)
      */
@@ -96,9 +106,7 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             EncryptionContext context, Collection<String> doNotDecrypt)
             throws GeneralSecurityException {
-        Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
-                itemAttributes, doNotDecrypt);
-        return decryptRecord(itemAttributes, attributeFlags, context);
+        return decryptAllFieldsExcept(itemAttributes, context, doNotDecrypt, encryptionConfiguration);
     }
 
     /**
@@ -120,6 +128,13 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotDecrypt) {
+        return allDecryptionFlagsExcept(itemAttributes, doNotDecrypt, encryptionConfiguration);
+    }
+
+
+    public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
+            Map<String, AttributeValue> itemAttributes,
+            Collection<String> doNotDecrypt, DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) {
         return internalEncryptor.allDecryptionFlagsExcept(itemAttributes, encryptionConfiguration, doNotDecrypt);
     }
 
@@ -176,6 +191,14 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
+        return decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+    }
+
+    public Map<String, AttributeValue> decryptRecord(
+            Map<String, AttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags,
+            EncryptionContext context,
+            DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) throws GeneralSecurityException {
         return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
     }
 
@@ -198,6 +221,15 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
+        return encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+    }
+
+
+    public Map<String, AttributeValue> encryptRecord(
+            Map<String, AttributeValue> itemAttributes,
+            Map<String, Set<EncryptionFlags>> attributeFlags,
+            EncryptionContext context,
+            DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) throws GeneralSecurityException {
         return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
     }
 
