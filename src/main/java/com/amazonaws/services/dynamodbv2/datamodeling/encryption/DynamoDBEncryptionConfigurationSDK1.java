@@ -14,10 +14,6 @@ public interface DynamoDBEncryptionConfigurationSDK1 extends DynamoDBEncryptionC
         return new DynamoDBEncryptionConfigurationSDK1Impl.DynamoDBEncryptionConfigurationSDK1ImplBuilder(this);
     }
 
-    void setSignatureFieldName(String signatureFieldName);
-
-    void setMaterialDescriptionFieldName(String descriptionFieldName);
-
     interface Builder {
         /**
          * Get the name of the DynamoDB field used to store the signature.

@@ -66,6 +66,14 @@ public class DynamoDBEncryptor {
         return getInstance(provider, DEFAULT_DESCRIPTION_BASE);
     }
 
+    public void setEncryptionConfiguration(DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) {
+        this.encryptionConfiguration = encryptionConfiguration;
+    }
+
+    public DynamoDBEncryptionConfigurationSDK1 getEncryptionConfiguration() {
+        return encryptionConfiguration;
+    }
+
     /**
      * Returns a decrypted version of the provided DynamoDb record. The signature is verified across
      * all provided fields. All fields (except those listed in <code>doNotEncrypt</code> are
@@ -106,7 +114,7 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             EncryptionContext context, Collection<String> doNotDecrypt)
             throws GeneralSecurityException {
-        return decryptAllFieldsExcept(itemAttributes, context, doNotDecrypt, encryptionConfiguration);
+        return decryptAllFieldsExcept(itemAttributes, context, doNotDecrypt, getEncryptionConfiguration());
     }
 
     /**
@@ -128,7 +136,7 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotDecrypt) {
-        return allDecryptionFlagsExcept(itemAttributes, doNotDecrypt, encryptionConfiguration);
+        return allDecryptionFlagsExcept(itemAttributes, doNotDecrypt, getEncryptionConfiguration());
     }
 
 
@@ -191,7 +199,7 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+        return decryptRecord(itemAttributes, attributeFlags, context, getEncryptionConfiguration());
     }
 
     public Map<String, AttributeValue> decryptRecord(
@@ -221,7 +229,7 @@ public class DynamoDBEncryptor {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+        return encryptRecord(itemAttributes, attributeFlags, context, getEncryptionConfiguration());
     }
 
 
@@ -244,7 +252,7 @@ public class DynamoDBEncryptor {
      * @return the name of the DynamoDB field used to store the signature
      */
     public String getSignatureFieldName() {
-        return encryptionConfiguration.getSignatureFieldName();
+        return getEncryptionConfiguration().getSignatureFieldName();
     }
 
     /**
@@ -254,7 +262,9 @@ public class DynamoDBEncryptor {
      * @param signatureFieldName
      */
     public void setSignatureFieldName(final String signatureFieldName) {
-        encryptionConfiguration.setSignatureFieldName(signatureFieldName);
+        setEncryptionConfiguration(getEncryptionConfiguration()
+                .toBuilder()
+                .withSignatureFieldName(signatureFieldName).build());
     }
 
     /**
@@ -265,7 +275,7 @@ public class DynamoDBEncryptor {
      *         DynamoDBEncryptedMapper
      */
     public String getMaterialDescriptionFieldName() {
-        return encryptionConfiguration.getMaterialDescriptionFieldName();
+        return getEncryptionConfiguration().getMaterialDescriptionFieldName();
     }
 
     /**
@@ -275,12 +285,14 @@ public class DynamoDBEncryptor {
      * @param materialDescriptionFieldName
      */
     public void setMaterialDescriptionFieldName(final String materialDescriptionFieldName) {
-        encryptionConfiguration.setMaterialDescriptionFieldName(materialDescriptionFieldName);
+        setEncryptionConfiguration(getEncryptionConfiguration()
+                .toBuilder()
+                .withMaterialDescriptionFieldName(materialDescriptionFieldName).build());
     }
 
 
     public String getSigningAlgorithmHeader() {
-        return encryptionConfiguration.getSigningAlgorithmHeader();
+        return getEncryptionConfiguration().getSigningAlgorithmHeader();
     }
     /**
      * Marshalls the <code>description</code> into a ByteBuffer by outputting
