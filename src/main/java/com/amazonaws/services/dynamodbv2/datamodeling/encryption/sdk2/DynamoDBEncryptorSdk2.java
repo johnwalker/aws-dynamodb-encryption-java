@@ -2,6 +2,7 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DefaultDynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfiguration;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfigurationSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk2;
@@ -17,17 +18,17 @@ import java.util.Map;
 import java.util.Set;
 
 public class DynamoDBEncryptorSdk2 {
-    private InternalDynamoDBEncryptor<AttributeValue, EncryptionContextSDK2, EncryptionContextBuilders.SDK2Builders.Builder, EncryptionContextBuilders.SDK2Builders.BuilderInternalAPI> internalEncryptor;
+    private InternalDynamoDBEncryptor<AttributeValue,
+            EncryptionContextSDK2,
+            EncryptionContextBuilders.SDK2Builders.Builder,
+            EncryptionContextBuilders.SDK2Builders.BuilderInternalAPI,
+            DynamoDBEncryptionConfigurationSDK2> internalEncryptor;
     private static DescriptionMarshaller DESCRIPTION_MARSHALLER = new DescriptionMarshaller();
-    private DynamoDBEncryptionConfiguration encryptionConfiguration;
+    private DynamoDBEncryptionConfigurationSDK2 encryptionConfiguration;
 
-    public DynamoDBEncryptorSdk2(EncryptionMaterialsProviderSdk2 provider) {
-        this(provider, new DefaultDynamoDBEncryptionConfiguration());
-    }
-
-    public DynamoDBEncryptorSdk2(EncryptionMaterialsProviderSdk2 provider, DynamoDBEncryptionConfiguration encryptionConfiguration) {
+    public DynamoDBEncryptorSdk2(DynamoDBEncryptionConfigurationSDK2 encryptionConfiguration) {
         this.encryptionConfiguration = encryptionConfiguration;
-        internalEncryptor = new InternalDynamoDBEncryptor<>(provider, new InternalAttributeValueTranslatorSdk2(), DESCRIPTION_MARSHALLER);
+        internalEncryptor = new InternalDynamoDBEncryptor<>(new InternalAttributeValueTranslatorSdk2(), DESCRIPTION_MARSHALLER);
     }
 
     /**
@@ -148,7 +149,7 @@ public class DynamoDBEncryptorSdk2 {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContextSDK2 context,
-            DynamoDBEncryptionConfiguration encryptionConfiguration) throws GeneralSecurityException {
+            DynamoDBEncryptionConfigurationSDK2 encryptionConfiguration) throws GeneralSecurityException {
         return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
     }
 
@@ -180,7 +181,7 @@ public class DynamoDBEncryptorSdk2 {
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContextSDK2 context,
-            DynamoDBEncryptionConfiguration encryptionConfiguration) throws GeneralSecurityException {
+            DynamoDBEncryptionConfigurationSDK2 encryptionConfiguration) throws GeneralSecurityException {
         return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
     }
 

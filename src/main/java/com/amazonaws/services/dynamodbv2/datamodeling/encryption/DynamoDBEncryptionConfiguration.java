@@ -17,7 +17,6 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      *
      * @param signatureFieldName
      */
-    void setSignatureFieldName(final String signatureFieldName);
 
     /**
      * Get the name of the DynamoDB field used to store metadata used by the
@@ -34,7 +33,6 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      *
      * @param materialDescriptionFieldName
      */
-    void setMaterialDescriptionFieldName(final String materialDescriptionFieldName);
 
     String getSigningAlgorithmHeader();
     String getSymModeHeader();
@@ -53,13 +51,10 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      *
      * @param signatureFieldName
      */
-    void setDescriptionBase(final String descriptionBase);
 
-    void setEncryptionContextTransformer(Transformer<T> encryptionContextTransformer);
 
     Transformer<T> getEncryptionContextTransformer();
 
-    void setEncryptionMaterialsProvider(final U encryptionMaterialsProvider);
 
     U getEncryptionMaterialsProvider();
 }

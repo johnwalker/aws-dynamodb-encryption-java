@@ -1,7 +1,7 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
+import java.util.function.UnaryOperator;
 
-public interface Transformer<T> {
-     T transform(T context);
+public interface Transformer<T> extends UnaryOperator<T> {
+    public T transform(T encryptionContext);
 }

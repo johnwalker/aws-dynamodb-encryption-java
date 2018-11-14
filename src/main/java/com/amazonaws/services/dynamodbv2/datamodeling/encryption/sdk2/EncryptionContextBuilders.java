@@ -1,5 +1,6 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfigurationSDK1;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 

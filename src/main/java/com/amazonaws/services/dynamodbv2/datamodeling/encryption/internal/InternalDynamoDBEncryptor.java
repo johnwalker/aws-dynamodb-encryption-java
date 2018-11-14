@@ -53,7 +53,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 public class InternalDynamoDBEncryptor<T,
         U extends EncryptionContextBuilders.GenericEncryptionContext<T, V>,
         V extends EncryptionContextBuilders.GenericBuilder<V, W, U>,
-        W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>> {
+        W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>,
+        Z extends DynamoDBEncryptionConfiguration<U, ?>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
@@ -68,13 +69,10 @@ public class InternalDynamoDBEncryptor<T,
     };
 
     private final DescriptionMarshaller descriptionMarshaller;
-    private InternalEncryptionMaterialsProvider<U> encryptionMaterialsProvider;
     private final InternalAttributeValueTranslator<T> internalAttributeValueTranslator;
 
-    public InternalDynamoDBEncryptor(InternalEncryptionMaterialsProvider<U> provider,
-                                     InternalAttributeValueTranslator<T> internalAttributeValueTranslator,
+    public InternalDynamoDBEncryptor(InternalAttributeValueTranslator<T> internalAttributeValueTranslator,
                                      DescriptionMarshaller descriptionMarshaller) {
-        this.encryptionMaterialsProvider = provider;
         this.internalAttributeValueTranslator = internalAttributeValueTranslator;
         this.descriptionMarshaller = descriptionMarshaller;
     }
@@ -99,18 +97,18 @@ public class InternalDynamoDBEncryptor<T,
      */
     public Map<String, T> decryptAllFieldsExcept(Map<String, T> itemAttributes,
                                                  U context,
-                                                 DynamoDBEncryptionConfiguration<U> encryptionConfiguration,
+                                                 Z encryptionConfiguration,
                                                  String... doNotDecrypt) throws GeneralSecurityException {
         return decryptAllFieldsExcept(itemAttributes, context, encryptionConfiguration, Arrays.asList(doNotDecrypt));
     }
     
     /**
-     * @see #decryptAllFieldsExcept(Map, U, String...)
+     * @see #decryptAllFieldsExcept(Map, U, Z, String...)
      */
     public Map<String, T> decryptAllFieldsExcept(
             Map<String, T> itemAttributes,
             U context,
-            DynamoDBEncryptionConfiguration<U> encryptionConfiguration,
+            Z encryptionConfiguration,
             Collection<String> doNotDecrypt)
             throws GeneralSecurityException {
         Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
@@ -124,7 +122,7 @@ public class InternalDynamoDBEncryptor<T,
      * @param doNotDecrypt fields to be excluded
      */
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
-            Map<String, T> itemAttributes, DynamoDBEncryptionConfiguration<U> encryptionConfiguration,
+            Map<String, T> itemAttributes, Z encryptionConfiguration,
             String ... doNotDecrypt) {
         return allDecryptionFlagsExcept(itemAttributes, encryptionConfiguration, Arrays.asList(doNotDecrypt));
     }
@@ -136,7 +134,7 @@ public class InternalDynamoDBEncryptor<T,
      */
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, T> itemAttributes,
-            DynamoDBEncryptionConfiguration<U> encryptionConfiguration,
+            Z encryptionConfiguration,
             Collection<String> doNotDecrypt) {
         Map<String, Set<EncryptionFlags>> attributeFlags = new HashMap<String, Set<EncryptionFlags>>();
 
@@ -167,7 +165,7 @@ public class InternalDynamoDBEncryptor<T,
      * @throws GeneralSecurityException
      */
     public Map<String, T> encryptAllFieldsExcept(Map<String, T> itemAttributes,
-            U context, DynamoDBEncryptionConfiguration<U> encryptionConfiguration, String... doNotEncrypt) throws GeneralSecurityException {
+            U context, Z encryptionConfiguration, String... doNotEncrypt) throws GeneralSecurityException {
         
         return encryptAllFieldsExcept(itemAttributes, context, encryptionConfiguration, Arrays.asList(doNotEncrypt));
     }
@@ -175,7 +173,7 @@ public class InternalDynamoDBEncryptor<T,
     public Map<String, T> encryptAllFieldsExcept(
             Map<String, T> itemAttributes,
             U context,
-            DynamoDBEncryptionConfiguration<U> encryptionConfiguration,
+            Z encryptionConfiguration,
             Collection<String> doNotEncrypt)
             throws GeneralSecurityException {
         Map<String, Set<EncryptionFlags>> attributeFlags = allEncryptionFlagsExcept(
@@ -221,7 +219,7 @@ public class InternalDynamoDBEncryptor<T,
             Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             U context,
-            DynamoDBEncryptionConfiguration<U> encryptionConfiguration) throws GeneralSecurityException {
+            Z encryptionConfiguration) throws GeneralSecurityException {
         if (attributeFlags.isEmpty()) {
             return itemAttributes;
         }
@@ -251,7 +249,7 @@ public class InternalDynamoDBEncryptor<T,
             context = encryptionContextTransformer.transform(context);
         }
 
-        materials = encryptionMaterialsProvider.getDecryptionMaterials(context);
+        materials = encryptionConfiguration.getEncryptionMaterialsProvider().getDecryptionMaterials(context);
         decryptionKey = materials.getDecryptionKey();
         if (materialDescription.containsKey(encryptionConfiguration.getSigningAlgorithmHeader())) {
             String signingAlg = materialDescription.get(encryptionConfiguration.getSigningAlgorithmHeader());
@@ -294,7 +292,7 @@ public class InternalDynamoDBEncryptor<T,
             Map<String, T> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             U context,
-            DynamoDBEncryptionConfiguration<U> encryptionConfiguration) throws GeneralSecurityException {
+            Z encryptionConfiguration) throws GeneralSecurityException {
         if (attributeFlags.isEmpty()) {
             return itemAttributes;
         }
@@ -309,12 +307,7 @@ public class InternalDynamoDBEncryptor<T,
             context = encryptionContextTransformer.transform(context);
         }
 
-
-        if (encryptionConfiguration.getEncryptionContextTransformer() != null) {
-            context = encryptionConfiguration.getEncryptionContextTransformer().transform(context);
-        }
-
-        EncryptionMaterials materials = encryptionMaterialsProvider.getEncryptionMaterials(context);
+        EncryptionMaterials materials = encryptionConfiguration.getEncryptionMaterialsProvider().getEncryptionMaterials(context);
         // We need to copy this because we modify it to record other encryption details
         Map<String, String> materialDescription = new HashMap<String, String>(
                 materials.getMaterialDescription());
@@ -355,7 +348,7 @@ public class InternalDynamoDBEncryptor<T,
     private void actualDecryption(Map<String, InternalAttributeValue> itemAttributes,
                                   Map<String, Set<EncryptionFlags>> attributeFlags, SecretKey encryptionKey,
                                   Map<String, String> materialDescription,
-                                  DynamoDBEncryptionConfiguration<U> encryptionConfiguration) throws GeneralSecurityException {
+                                  Z encryptionConfiguration) throws GeneralSecurityException {
         final String encryptionMode = encryptionKey != null ?  encryptionKey.getAlgorithm() +
                     materialDescription.get(encryptionConfiguration.getSymModeHeader()) : null;
         Cipher cipher = null;
@@ -403,7 +396,7 @@ public class InternalDynamoDBEncryptor<T,
                                   Map<String, Set<EncryptionFlags>> attributeFlags,
                                   Map<String, String> materialDescription,
                                   SecretKey encryptionKey,
-                                  DynamoDBEncryptionConfiguration<U> encryptionConfiguration) throws GeneralSecurityException {
+                                  Z encryptionConfiguration) throws GeneralSecurityException {
         String encryptionMode = null;
         if (encryptionKey != null) {
             materialDescription.put(encryptionConfiguration.getSymModeHeader(),

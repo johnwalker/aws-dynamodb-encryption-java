@@ -57,7 +57,6 @@ public class DirectKmsMaterialProvider implements EncryptionMaterialsProvider {
     private static final String VERSION_STRING = "1.0";
     private static final String USER_AGENT = DirectKmsMaterialProvider.class.getName()
             + "/" + VERSION_STRING + "/" + VersionInfoUtils.getVersion();
-    // TODO: Come back and make these private again
     private static final String COVERED_ATTR_CTX_KEY = "aws-kms-ec-attr";
     private static final String SIGNING_KEY_ALGORITHM = "amzn-ddb-sig-alg";
     private static final String TABLE_NAME_EC_KEY = "*aws-kms-table*";

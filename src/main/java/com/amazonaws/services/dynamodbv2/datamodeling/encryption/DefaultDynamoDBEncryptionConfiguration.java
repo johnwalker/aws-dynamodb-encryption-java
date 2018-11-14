@@ -1,6 +1,7 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 
 public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptionConfigurationSDK2 {
 
@@ -10,6 +11,7 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
     private String signingAlgorithmHeader;
     private String descriptionBase;
     private Transformer<EncryptionContextSDK2> encryptionContextTransformer;
+    private EncryptionMaterialsProviderSdk2 encryptionMaterialsProviderSdk2;
 
     public DefaultDynamoDBEncryptionConfiguration() {
         this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
@@ -18,6 +20,7 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         this.symModeHeader = EncryptionConstants.DEFAULT_SYM_MODE_HEADER;
         this.descriptionBase = EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
         this.encryptionContextTransformer = null;
+        this.encryptionMaterialsProviderSdk2 = null;
     }
 
     @Override
@@ -25,7 +28,6 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         return signatureFieldName;
     }
 
-    @Override
     public void setSignatureFieldName(String signatureFieldName) {
         this.signatureFieldName = signatureFieldName;
     }
@@ -35,7 +37,6 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         return materialDescriptionFieldName;
     }
 
-    @Override
     public void setMaterialDescriptionFieldName(String materialDescriptionFieldName) {
         this.materialDescriptionFieldName = materialDescriptionFieldName;
     }
@@ -55,14 +56,12 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         return symModeHeader;
     }
 
-    @Override
     public void setDescriptionBase(String descriptionBase) {
         this.descriptionBase = descriptionBase;
         this.symModeHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
         this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
     }
 
-    @Override
     public void setEncryptionContextTransformer(Transformer<EncryptionContextSDK2> encryptionContextTransformer) {
         this.encryptionContextTransformer = encryptionContextTransformer;
 
@@ -71,5 +70,14 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
     @Override
     public Transformer<EncryptionContextSDK2> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
+    }
+
+    public void setEncryptionMaterialsProvider(EncryptionMaterialsProviderSdk2 encryptionMaterialsProvider) {
+        this.encryptionMaterialsProviderSdk2 = encryptionMaterialsProvider;
+    }
+
+    @Override
+    public EncryptionMaterialsProviderSdk2 getEncryptionMaterialsProvider() {
+        return encryptionMaterialsProviderSdk2;
     }
 }
