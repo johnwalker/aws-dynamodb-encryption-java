@@ -3,17 +3,19 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 
-public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptionConfigurationSDK2 {
+import java.util.function.UnaryOperator;
+
+public class ynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncryptionConfigurationSDK2 {
 
     private String symModeHeader;
     private String signatureFieldName;
     private String materialDescriptionFieldName;
     private String signingAlgorithmHeader;
     private String descriptionBase;
-    private Transformer<EncryptionContextSDK2> encryptionContextTransformer;
+    private UnaryOperator<EncryptionContextSDK2> encryptionContextTransformer;
     private EncryptionMaterialsProviderSdk2 encryptionMaterialsProviderSdk2;
 
-    public DefaultDynamoDBEncryptionConfiguration() {
+    public ynamoDBEncryptionConfigurationSDK2Impl() {
         this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
         this.materialDescriptionFieldName = EncryptionConstants.DEFAULT_METADATA_FIELD;
         this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
@@ -62,13 +64,12 @@ public class DefaultDynamoDBEncryptionConfiguration implements DynamoDBEncryptio
         this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
     }
 
-    public void setEncryptionContextTransformer(Transformer<EncryptionContextSDK2> encryptionContextTransformer) {
+    public void setEncryptionContextTransformer(UnaryOperator<EncryptionContextSDK2> encryptionContextTransformer) {
         this.encryptionContextTransformer = encryptionContextTransformer;
-
     }
 
     @Override
-    public Transformer<EncryptionContextSDK2> getEncryptionContextTransformer() {
+    public UnaryOperator<EncryptionContextSDK2> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
     }
 

@@ -74,7 +74,7 @@ class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfi
         this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
     }
 
-    public void setEncryptionContextTransformer(Transformer<EncryptionContext> encryptionContextTransformer) {
+    public void setEncryptionContextTransformer(UnaryOperator<EncryptionContext> encryptionContextTransformer) {
         this.encryptionContextTransformer = encryptionContextTransformer;
 
     }

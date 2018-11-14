@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.SymmetricStaticProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.CryptoInterceptor;
@@ -69,7 +68,7 @@ public class DynamoDBEncryptorSdk2Test {
         prov = new InstrumentedEncryptionMaterialsProvider(
                 new SymmetricStaticProviderSdk2(encryptionKey, macKey,
                         Collections.<String, String> emptyMap()));
-        DefaultDynamoDBEncryptionConfiguration encryptionConfiguration = new DefaultDynamoDBEncryptionConfiguration();
+        ynamoDBEncryptionConfigurationSDK2Impl encryptionConfiguration = new ynamoDBEncryptionConfigurationSDK2Impl();
         encryptionConfiguration.setEncryptionMaterialsProvider(prov);
         encryptionConfiguration.setDescriptionBase("encryptor-");
 
@@ -130,9 +129,9 @@ public class DynamoDBEncryptorSdk2Test {
         macGen.init(256, Utils.getRng());
         SecretKey macKey = macGen.generateKey();
 
-        DefaultDynamoDBEncryptionConfiguration defaultDynamoDBEncryptionConfiguration = new DefaultDynamoDBEncryptionConfiguration();
-        defaultDynamoDBEncryptionConfiguration.setEncryptionMaterialsProvider(new SymmetricStaticProviderSdk2(encryptionKey, macKey, Collections.emptyMap()));
-        DynamoDBEncryptorSdk2 encryptorSdk2 = new DynamoDBEncryptorSdk2(defaultDynamoDBEncryptionConfiguration);
+        ynamoDBEncryptionConfigurationSDK2Impl ynamoDBEncryptionConfigurationSDK2Impl = new ynamoDBEncryptionConfigurationSDK2Impl();
+        ynamoDBEncryptionConfigurationSDK2Impl.setEncryptionMaterialsProvider(new SymmetricStaticProviderSdk2(encryptionKey, macKey, Collections.emptyMap()));
+        DynamoDBEncryptorSdk2 encryptorSdk2 = new DynamoDBEncryptorSdk2(ynamoDBEncryptionConfigurationSDK2Impl);
 
         DynamoDbAsyncClient client = DynamoDbAsyncClient.builder()
                 .overrideConfiguration(ClientOverrideConfiguration.builder()
