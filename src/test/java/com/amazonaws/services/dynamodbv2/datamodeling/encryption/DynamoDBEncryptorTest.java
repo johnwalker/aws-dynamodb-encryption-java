@@ -68,6 +68,8 @@ public class DynamoDBEncryptorTest {
     private DynamoDBEncryptor encryptor;
     private Map<String, AttributeValue> attribs;
     private EncryptionContext context;
+
+    private static final String TEST_DESCRIPTION_BASE = "encryptor-";
     
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -85,7 +87,7 @@ public class DynamoDBEncryptorTest {
         prov = new InstrumentedEncryptionMaterialsProvider(
                     new SymmetricStaticProvider(encryptionKey, macKey,
                         Collections.<String, String> emptyMap()));
-        encryptor = DynamoDBEncryptor.getInstance(prov, "encryptor-");
+        encryptor = DynamoDBEncryptor.getInstance(prov, TEST_DESCRIPTION_BASE);
         
         attribs = new HashMap<String, AttributeValue>();
         attribs.put("intValue", new AttributeValue().withN("123"));
@@ -267,6 +269,12 @@ public class DynamoDBEncryptorTest {
         assertThat(encryptedAttributes, AttrMatcher.invert(attribs));
         encryptedAttributes.get("hashKey").setN("666");
         encryptor.decryptAllFieldsExcept(encryptedAttributes, context, attribs.keySet().toArray(new String[0]));
+    }
+
+    @Test
+    public void getSigningAlgorithmHeader() {
+        String signingAlgorithmHeader = encryptor.getSigningAlgorithmHeader();
+        assertEquals(TEST_DESCRIPTION_BASE + "signingAlg", signingAlgorithmHeader);
     }
     
     @Test
