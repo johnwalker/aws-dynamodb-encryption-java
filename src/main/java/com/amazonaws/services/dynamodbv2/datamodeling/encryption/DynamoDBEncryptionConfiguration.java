@@ -2,6 +2,8 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
+import java.util.function.UnaryOperator;
+
 public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
     /**
      * Get the name of the DynamoDB field used to store the signature.
@@ -53,7 +55,7 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      */
 
 
-    Transformer<T> getEncryptionContextTransformer();
+    UnaryOperator<T> getEncryptionContextTransformer();
 
 
     U getEncryptionMaterialsProvider();

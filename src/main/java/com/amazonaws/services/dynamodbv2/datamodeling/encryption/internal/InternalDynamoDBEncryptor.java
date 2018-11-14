@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -244,9 +245,9 @@ public class InternalDynamoDBEncryptor<T,
                 .publicAPI()
                 .build();
 
-        Transformer<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
+        UnaryOperator<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
         if(encryptionContextTransformer != null) {
-            context = encryptionContextTransformer.transform(context);
+            context = encryptionContextTransformer.apply(context);
         }
 
         materials = encryptionConfiguration.getEncryptionMaterialsProvider().getDecryptionMaterials(context);
@@ -302,9 +303,9 @@ public class InternalDynamoDBEncryptor<T,
         // Copy the attribute values into the context
         context = context.toBuilder().internalAPI().withAttributeValues(itemAttributes).publicAPI().build();
 
-        Transformer<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
+        UnaryOperator<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
         if(encryptionContextTransformer != null) {
-            context = encryptionContextTransformer.transform(context);
+            context = encryptionContextTransformer.apply(context);
         }
 
         EncryptionMaterials materials = encryptionConfiguration.getEncryptionMaterialsProvider().getEncryptionMaterials(context);

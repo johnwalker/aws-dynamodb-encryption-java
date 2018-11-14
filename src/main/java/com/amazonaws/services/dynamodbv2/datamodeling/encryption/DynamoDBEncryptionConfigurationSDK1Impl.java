@@ -2,6 +2,8 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 
+import java.util.function.UnaryOperator;
+
 class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfigurationSDK1 {
     // Not set directly, but modified by changing descriptionBase
     private String symModeHeader;
@@ -10,7 +12,7 @@ class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfi
     private String signatureFieldName;
     private String materialDescriptionFieldName;
     private String descriptionBase;
-    private Transformer<EncryptionContext> encryptionContextTransformer;
+    private UnaryOperator<EncryptionContext> encryptionContextTransformer;
     private EncryptionMaterialsProvider encryptionMaterialsProviderSdk2;
 
     DynamoDBEncryptionConfigurationSDK1Impl() {
@@ -78,7 +80,7 @@ class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfi
     }
 
     @Override
-    public Transformer<EncryptionContext> getEncryptionContextTransformer() {
+    public UnaryOperator<EncryptionContext> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
     }
 
@@ -94,7 +96,7 @@ class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfi
     static final class DynamoDBEncryptionConfigurationSDK1ImplBuilder implements DynamoDBEncryptionConfigurationSDK1.Builder {
 
         private EncryptionMaterialsProvider encryptionMaterialsProvider;
-        private Transformer<EncryptionContext> encryptionContextTransformer;
+        private UnaryOperator<EncryptionContext> encryptionContextTransformer;
         private String materialDescriptionFieldName;
         private String descriptionBase;
         private String signatureFieldName;
@@ -130,7 +132,7 @@ class DynamoDBEncryptionConfigurationSDK1Impl implements DynamoDBEncryptionConfi
         }
 
         @Override
-        public Builder withEncryptionContextTransformer(Transformer<EncryptionContext> transformer) {
+        public Builder withEncryptionContextTransformer(UnaryOperator<EncryptionContext> transformer) {
             this.encryptionContextTransformer = transformer;
             return this;
         }

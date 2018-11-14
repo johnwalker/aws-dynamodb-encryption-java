@@ -2,6 +2,8 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 
+import java.util.function.UnaryOperator;
+
 public interface DynamoDBEncryptionConfigurationSDK1 extends DynamoDBEncryptionConfiguration<EncryptionContext, EncryptionMaterialsProvider> {
 
     static Builder builder() {
@@ -29,7 +31,7 @@ public interface DynamoDBEncryptionConfigurationSDK1 extends DynamoDBEncryptionC
 
         Builder withDescriptionBase(String descriptionBase);
 
-        Builder withEncryptionContextTransformer(Transformer<EncryptionContext> transformer);
+        Builder withEncryptionContextTransformer(UnaryOperator<EncryptionContext> transformer);
 
         Builder withEncryptionMaterialsProvider(EncryptionMaterialsProvider encryptionMaterialsProvider);
 
