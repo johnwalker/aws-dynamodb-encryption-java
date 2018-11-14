@@ -68,7 +68,7 @@ public class DynamoDBEncryptorSdk2Test {
         prov = new InstrumentedEncryptionMaterialsProvider(
                 new SymmetricStaticProviderSdk2(encryptionKey, macKey,
                         Collections.<String, String> emptyMap()));
-        ynamoDBEncryptionConfigurationSDK2Impl encryptionConfiguration = new ynamoDBEncryptionConfigurationSDK2Impl();
+        DynamoDBEncryptionConfigurationSDK2Impl encryptionConfiguration = new DynamoDBEncryptionConfigurationSDK2Impl();
         encryptionConfiguration.setEncryptionMaterialsProvider(prov);
         encryptionConfiguration.setDescriptionBase("encryptor-");
 
@@ -129,9 +129,9 @@ public class DynamoDBEncryptorSdk2Test {
         macGen.init(256, Utils.getRng());
         SecretKey macKey = macGen.generateKey();
 
-        ynamoDBEncryptionConfigurationSDK2Impl ynamoDBEncryptionConfigurationSDK2Impl = new ynamoDBEncryptionConfigurationSDK2Impl();
-        ynamoDBEncryptionConfigurationSDK2Impl.setEncryptionMaterialsProvider(new SymmetricStaticProviderSdk2(encryptionKey, macKey, Collections.emptyMap()));
-        DynamoDBEncryptorSdk2 encryptorSdk2 = new DynamoDBEncryptorSdk2(ynamoDBEncryptionConfigurationSDK2Impl);
+        DynamoDBEncryptionConfigurationSDK2Impl dynamoDBEncryptionConfigurationSDK2Impl = new DynamoDBEncryptionConfigurationSDK2Impl();
+        dynamoDBEncryptionConfigurationSDK2Impl.setEncryptionMaterialsProvider(new SymmetricStaticProviderSdk2(encryptionKey, macKey, Collections.emptyMap()));
+        DynamoDBEncryptorSdk2 encryptorSdk2 = new DynamoDBEncryptorSdk2(dynamoDBEncryptionConfigurationSDK2Impl);
 
         DynamoDbAsyncClient client = DynamoDbAsyncClient.builder()
                 .overrideConfiguration(ClientOverrideConfiguration.builder()

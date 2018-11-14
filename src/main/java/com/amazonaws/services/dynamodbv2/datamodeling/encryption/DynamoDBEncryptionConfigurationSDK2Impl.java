@@ -5,7 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.
 
 import java.util.function.UnaryOperator;
 
-public class ynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncryptionConfigurationSDK2 {
+public class DynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncryptionConfigurationSDK2 {
 
     private String symModeHeader;
     private String signatureFieldName;
@@ -15,7 +15,7 @@ public class ynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncryptio
     private UnaryOperator<EncryptionContextSDK2> encryptionContextTransformer;
     private EncryptionMaterialsProviderSdk2 encryptionMaterialsProviderSdk2;
 
-    public ynamoDBEncryptionConfigurationSDK2Impl() {
+    public DynamoDBEncryptionConfigurationSDK2Impl() {
         this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
         this.materialDescriptionFieldName = EncryptionConstants.DEFAULT_METADATA_FIELD;
         this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
