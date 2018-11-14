@@ -278,6 +278,10 @@ public class DynamoDBEncryptor {
         encryptionConfiguration.setMaterialDescriptionFieldName(materialDescriptionFieldName);
     }
 
+
+    public String getSigningAlgorithmHeader() {
+        return encryptionConfiguration.getSigningAlgorithmHeader();
+    }
     /**
      * Marshalls the <code>description</code> into a ByteBuffer by outputting
      * each key (modified UTF-8) followed by its value (also in modified UTF-8).
