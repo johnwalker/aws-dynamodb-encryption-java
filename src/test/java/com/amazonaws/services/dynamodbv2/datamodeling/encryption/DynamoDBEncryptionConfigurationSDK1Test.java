@@ -65,15 +65,42 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
     }
 
     @Test
-    public void testToBuilder() {
+    public void testAllConfigurationBuilderOptions() {
         DynamoDBEncryptionConfigurationSDK1 configuration = DynamoDBEncryptionConfigurationSDK1.builder()
                 .withDescriptionBase("prefix-")
+                .withMaterialDescriptionFieldName("bobbydroptables")
+                .withSignatureFieldName("signaturename")
+                .withEncryptionMaterialsProvider(encryptionMaterialsProviderStub)
+                .withEncryptionContextTransformer(encryptionContextTransformerStub)
+                .build();
+
+
+        assertEquals("prefix-", configuration.getDescriptionBase());
+        assertEquals("bobbydroptables", configuration.getMaterialDescriptionFieldName());
+        assertEquals("signaturename", configuration.getSignatureFieldName());
+        assertEquals(encryptionMaterialsProviderStub, configuration.getEncryptionMaterialsProvider());
+        assertEquals(encryptionContextTransformerStub, configuration.getEncryptionContextTransformer());
+
+    }
+
+    @Test
+    public void testToBuilderCopiesFieldsFromOriginalConfigurationFile() {
+        // Setup the original configuration
+        DynamoDBEncryptionConfigurationSDK1 configuration = DynamoDBEncryptionConfigurationSDK1.builder()
+                .withDescriptionBase("prefix-")
+                .withMaterialDescriptionFieldName("bobbydroptables")
+                .withSignatureFieldName("signaturename")
                 .withEncryptionMaterialsProvider(encryptionMaterialsProviderStub)
                 .withEncryptionContextTransformer(encryptionContextTransformerStub)
                 .build();
 
         DynamoDBEncryptionConfigurationSDK1 newlybuilt = configuration.toBuilder().build();
 
+        assertEquals("prefix-", newlybuilt.getDescriptionBase());
+        assertEquals("bobbydroptables", newlybuilt.getMaterialDescriptionFieldName());
+        assertEquals("signaturename", newlybuilt.getSignatureFieldName());
+        assertEquals(encryptionMaterialsProviderStub, newlybuilt.getEncryptionMaterialsProvider());
+        assertEquals(encryptionContextTransformerStub, newlybuilt.getEncryptionContextTransformer());
     }
 
 }
