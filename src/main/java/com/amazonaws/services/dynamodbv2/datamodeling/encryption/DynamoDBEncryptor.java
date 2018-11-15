@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfigurationSDK1;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk1;
