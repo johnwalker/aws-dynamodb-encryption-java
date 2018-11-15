@@ -1,5 +1,7 @@
-package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
+package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 
 import java.util.function.UnaryOperator;

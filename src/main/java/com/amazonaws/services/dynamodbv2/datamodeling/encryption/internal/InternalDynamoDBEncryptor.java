@@ -36,14 +36,12 @@ import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DelegatedKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfiguration;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.Transformer;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextBuilders;
 import com.amazonaws.services.dynamodbv2.datamodeling.internal.Utils;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 /**
  * The low-level API used by {@link AttributeEncryptor} to perform crypto

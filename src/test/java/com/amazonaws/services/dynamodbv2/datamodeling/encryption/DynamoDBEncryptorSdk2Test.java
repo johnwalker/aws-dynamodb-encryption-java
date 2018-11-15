@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration.DynamoDBEncryptionConfigurationSDK2Impl;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.SymmetricStaticProviderSdk2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.CryptoInterceptor;

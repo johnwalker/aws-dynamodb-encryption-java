@@ -1,6 +1,6 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DynamoDBEncryptionConfigurationSDK2;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration.DynamoDBEncryptionConfigurationSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk2;

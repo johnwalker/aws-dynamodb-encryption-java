@@ -1,5 +1,6 @@
-package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
+package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 

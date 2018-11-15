@@ -1,5 +1,6 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfigurationSDK1;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
@@ -12,6 +13,10 @@ import static org.junit.Assert.assertNull;
 
 public class DynamoDBEncryptionConfigurationSDK1Test {
 
+    /**
+     * Only object identity is needed for the configuration tests on encryptionMaterialsProviderStub and
+     * encryptionContextTransformerStub
+     */
     EncryptionMaterialsProvider encryptionMaterialsProviderStub = new EncryptionMaterialsProvider() {
         @Override
         public DecryptionMaterials getDecryptionMaterials(EncryptionContext context) {
@@ -28,8 +33,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
 
         }
     };
-
-    UnaryOperator<EncryptionContext> encryptionContextTransformerStub = (EncryptionContext t) -> t;
+    UnaryOperator<EncryptionContext> encryptionContextTransformerStub = t -> t;
 
     @Test
     public void testDefaultConfiguration() {
