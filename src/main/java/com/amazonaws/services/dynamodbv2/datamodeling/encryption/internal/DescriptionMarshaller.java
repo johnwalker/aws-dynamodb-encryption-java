@@ -28,16 +28,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The API used for marshalling material descriptions maps to and from bytes.
- *
- * The material description is used for recording the version number of the format,
- * and the algorithms used for encrypting the record.
- *
+ * Internal API used for marshalling maps of material descriptions to bytes, and vice
+ * versa. The version number of the format is included alongside the serialized material
+ * descriptions, and validated on read.
  **/
 public class DescriptionMarshaller {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
+
+    /**
+     * The default version of the serialization format used for records.
+     */
     private static final int DYNAMODB_ENCRYPTION_FORMAT_VERSION = 0;
 
+    /**
+     * The version of the serialization format used for the record. By default,
+     * it is {@value DYNAMODB_ENCRYPTION_FORMAT_VERSION}.
+     */
     final int dynamoDBEncryptionFormatVersion;
 
     public DescriptionMarshaller() {
@@ -50,11 +56,12 @@ public class DescriptionMarshaller {
 
     /**
      * Marshalls the <code>description</code> into bytes by outputting
-     * each key (modified UTF-8) followed by its value (also in modified UTF-8).
+     * each key followed by its value. Both the key and the value are
+     * encoded in modified UTF-8.
      *
-     * @param description
-     * @return the description encoded as an AttributeValue with a ByteBuffer value
-     * @see java.io.DataOutput#writeUTF(String)
+     * @param description the map to be serialized
+     * @return the description encoded as bytes
+     * @see java.io.DataInput modified UTF-8
      */
     public byte[] marshallDescription(Map<String, String> description) {
         try {
@@ -78,7 +85,12 @@ public class DescriptionMarshaller {
     }
 
     /**
+     * Unmarshalls the <code>byteBuffer</code> into a description map
+     *
+     * @param byteBuffer the modified UTF-8 encoded bytes of a description
+     * @return the map that was originally serialized through marshallDescription
      * @see #marshallDescription(Map)
+     * @see java.io.DataInput modified UTF-8
      */
     public Map<String, String> unmarshallDescription(ByteBuffer byteBuffer) {
         byteBuffer.mark();
@@ -120,7 +132,11 @@ public class DescriptionMarshaller {
         }
     }
 
-    public int getDynamoDBEncryptionFormatVersion() {
+
+    /**
+     * @return {@link #dynamoDBEncryptionFormatVersion}
+     */
+    int getDynamoDBEncryptionFormatVersion() {
         return this.dynamoDBEncryptionFormatVersion;
     }
 }
