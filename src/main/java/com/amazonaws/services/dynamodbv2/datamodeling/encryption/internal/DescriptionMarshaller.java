@@ -30,6 +30,9 @@ import java.util.Map;
 /**
  * The API used for marshalling material descriptions maps to and from bytes.
  *
+ * The material description is used for recording the version number of the format,
+ * and the algorithms used for encrypting the record.
+ *
  **/
 public class DescriptionMarshaller {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
