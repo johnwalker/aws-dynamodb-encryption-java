@@ -15,12 +15,9 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 
 public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
@@ -36,7 +33,6 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      *         DynamoDBEncryptedMapper Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
      */
     String getMaterialDescriptionFieldName();
-
 
     /**
      * @return the name of the material description field that stores the signing algorithm header
@@ -67,12 +63,19 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
     T getEncryptionContext();
 
     /**
-     * @return the encryption flags that are supplied to the DynamoDBEncryptor
+     * @return the overridden actions that should be applied by the DynamoDBEncryptor to each
+     * attribute
      */
-    Map<String, Set<EncryptionFlags>> getEncryptionFlags();
+    Map<String, AttributeEncryptionActions> getAttributeEncryptionActions();
 
-    List<String> getAttributesToSkipDecrypting(List<String> attributesToSkipDecrypting);
-    List<String> getAttributesToSkipEncrypting(List<String> attributesToSkipEncrypting);
+    /**
+     * @return the action that should be applied by the DynamoDBEncryptor in the event that the
+     * attribute doesn't have an AttributeAction
+     *
+     * Default action in SDK1: Do nothing
+     * Default action in SDK2: Encrypt and Sign, like in Pythno
+     */
+    AttributeEncryptionActions getDefaultAttributeEncryptionAction();
 
     /**
      * @return the materials provider used to retrieve encryption materials for encrypting
