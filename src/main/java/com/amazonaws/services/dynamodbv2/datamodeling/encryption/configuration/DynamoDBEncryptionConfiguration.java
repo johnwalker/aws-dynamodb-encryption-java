@@ -72,8 +72,8 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      * @return the action that should be applied by the DynamoDBEncryptor in the event that the
      * attribute doesn't have an AttributeAction
      *
-     * Default action in SDK1: Do nothing
-     * Default action in SDK2: Encrypt and Sign, like in Pythno
+     * Default action in SDK1: DO_NOTHING for legacy reasons
+     * Default action in SDK2: ENCRYPT_AND_SIGN
      */
     AttributeEncryptionActions getDefaultAttributeEncryptionAction();
 

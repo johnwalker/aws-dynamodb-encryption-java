@@ -19,5 +19,5 @@ public enum AttributeEncryptionActions {
     /**
      * Don't encrypt or sign the attribute
      */
-    DO_NOT_TOUCH
+    DO_NOTHING
 }
