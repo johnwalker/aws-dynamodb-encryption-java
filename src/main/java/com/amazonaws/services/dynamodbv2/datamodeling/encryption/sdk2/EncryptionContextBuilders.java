@@ -36,21 +36,59 @@ public class EncryptionContextBuilders {
         }
     }
 
+    /**
+     *
+     * @param <B> The Builder for the public API
+     * @param <B2> The Builder for the internal API
+     * @param <E> The EncryptionContext that the builder constructs
+     */
     public interface GenericBuilder<B, B2 extends GenericBuilder.GenericBuilderInternalAPI<B, ?, ?>, E> {
+        /**
+         * @param tableName the new table name
+         * @return this builder
+         */
         B withTableName(String tableName);
 
+        /**
+         * @param modeledClass the new modeled class
+         * @return this builder
+         */
         B withModeledClass(Class<?> modeledClass);
 
+        /**
+         * @param developerContext the new developer context
+         * @return this builder
+         */
         B withDeveloperContext(Object developerContext);
 
+        /**
+         * @param hashKeyName the new hash key name
+         * @return this builder
+         */
         B withHashKeyName(String hashKeyName);
 
+        /**
+         * @param rangeKeyName the new range key name
+         * @return this builder
+         */
         B withRangeKeyName(String rangeKeyName);
 
+        /**
+         * @param materialDescription the new material description
+         * @return this builder
+         */
         B withMaterialDescription(Map<String, String> materialDescription);
 
+        /**
+         * accessor to internal APIs. Isn't intended for public use
+         * @return this builder
+         */
         B2 internalAPI();
 
+        /**
+         *
+         * @return the EncryptionContext constructed by the builder
+         */
         E build();
 
         interface GenericBuilderInternalAPI<B, B2, T> {

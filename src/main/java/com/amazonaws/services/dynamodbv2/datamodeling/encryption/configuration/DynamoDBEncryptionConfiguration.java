@@ -15,63 +15,68 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
     /**
-     * Get the name of the DynamoDB field used to store the signature.
-     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
      *
-     * @return the name of the DynamoDB field used to store the signature
+     * @return the name of the DynamoDB field used to store the signature.
+     *         Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
      */
     String getSignatureFieldName();
 
     /**
-     * Set the name of the DynamoDB field used to store the signature.
-     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNING_ALGORITHM_HEADER}
-     *
-     * @param signatureFieldName
-     */
-
-    /**
-     * Get the name of the DynamoDB field used to store metadata used by the
-     * DynamoDBEncryptedMapper. Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
-     *
      * @return the name of the DynamoDB field used to store metadata used by the
-     *         DynamoDBEncryptedMapper
+     *         DynamoDBEncryptedMapper Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
      */
     String getMaterialDescriptionFieldName();
 
-    /**
-     * Set the name of the DynamoDB field used to store metadata used by the
-     * DynamoDBEncryptedMapper
-     *
-     * @param materialDescriptionFieldName
-     */
 
+    /**
+     * @return the name of the material description field that stores the signing algorithm header
+     *         Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
+     */
     String getSigningAlgorithmHeader();
+
+    /**
+     * @return the name of the material description field that stores the symmetric mode header
+     *         Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
+     */
     String getSymModeHeader();
 
     /**
-     * Get the name of the DynamoDB field used to store the signature.
-     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
-     *
-     * @return the name of the DynamoDB field used to store the signature
+     * @return the name of the DynamoDB field used to store the signature.
+     *          Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
      */
     String getDescriptionBase();
 
     /**
-     * Set the name of the DynamoDB field used to store the signature.
-     * Defaults to {@value EncryptionConstants#DEFAULT_SIGNING_ALGORITHM_HEADER}
-     *
-     * @param signatureFieldName
+     * @return Get the operator thats used to override anything applied by the DynamoDBEncryptor
      */
-
-
     UnaryOperator<T> getEncryptionContextTransformer();
 
+    /**
+     * @return the original EncryptionContext that is supplied to the DynamoDBEncryptor
+     */
+    T getEncryptionContext();
 
+    /**
+     * @return the encryption flags that are supplied to the DynamoDBEncryptor
+     */
+    Map<String, Set<EncryptionFlags>> getEncryptionFlags();
+
+    List<String> getAttributesToSkipDecrypting(List<String> attributesToSkipDecrypting);
+    List<String> getAttributesToSkipEncrypting(List<String> attributesToSkipEncrypting);
+
+    /**
+     * @return the materials provider used to retrieve encryption materials for encrypting
+     * or decrypting the record
+     */
     U getEncryptionMaterialsProvider();
 }

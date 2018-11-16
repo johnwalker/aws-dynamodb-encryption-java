@@ -28,6 +28,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Encryptor for DynamoDB records using AWS SDK2
+ */
 public class DynamoDBEncryptorSdk2 {
     private InternalDynamoDBEncryptor<AttributeValue,
             EncryptionContextSDK2,

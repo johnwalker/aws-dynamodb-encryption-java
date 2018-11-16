@@ -17,12 +17,7 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
-import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
-import software.amazon.awssdk.awscore.AwsRequest;
-import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
-import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.services.kms.KmsClient;
-import software.amazon.awssdk.services.kms.KmsClientBuilder;
 
 import java.util.HashMap;
 import java.util.Map;

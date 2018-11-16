@@ -45,19 +45,10 @@ public class DynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncrypti
         return signatureFieldName;
     }
 
-    public void setSignatureFieldName(String signatureFieldName) {
-        this.signatureFieldName = signatureFieldName;
-    }
-
     @Override
     public String getMaterialDescriptionFieldName() {
         return materialDescriptionFieldName;
     }
-
-    public void setMaterialDescriptionFieldName(String materialDescriptionFieldName) {
-        this.materialDescriptionFieldName = materialDescriptionFieldName;
-    }
-
     @Override
     public String getSigningAlgorithmHeader() {
         return signingAlgorithmHeader;
@@ -79,17 +70,9 @@ public class DynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncrypti
         this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
     }
 
-    public void setEncryptionContextTransformer(UnaryOperator<EncryptionContextSDK2> encryptionContextTransformer) {
-        this.encryptionContextTransformer = encryptionContextTransformer;
-    }
-
     @Override
     public UnaryOperator<EncryptionContextSDK2> getEncryptionContextTransformer() {
         return encryptionContextTransformer;
-    }
-
-    public void setEncryptionMaterialsProvider(EncryptionMaterialsProviderSdk2 encryptionMaterialsProvider) {
-        this.encryptionMaterialsProviderSdk2 = encryptionMaterialsProvider;
     }
 
     @Override

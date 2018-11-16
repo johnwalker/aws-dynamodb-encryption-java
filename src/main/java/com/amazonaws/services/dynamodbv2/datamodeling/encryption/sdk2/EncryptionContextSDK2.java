@@ -43,14 +43,14 @@ public class EncryptionContextSDK2 implements EncryptionContextBuilders.GenericE
     }
 
     /**
-     * Returns the name of the DynamoDB Table this record is associated with.
+     * @return the name of the DynamoDB Table this record is associated with.
      */
     public String getTableName() {
         return tableName;
     }
 
     /**
-     * Returns the DynamoDB record about to be encrypted/decrypted.
+     * @return the DynamoDB record about to be encrypted/decrypted.
      */
     public Map<String, AttributeValue> getAttributeValues() {
         return attributeValues;
@@ -59,6 +59,7 @@ public class EncryptionContextSDK2 implements EncryptionContextBuilders.GenericE
     /**
      * When used for an object mapping layer (such as {@link DynamoDBMapper})
      * this represents the class being mapped to/from DynamoDB.
+     * @return the class being mapped to/from DynamoDB
      */
     public Class<?> getModeledClass() {
         return modeledClass;
@@ -67,34 +68,43 @@ public class EncryptionContextSDK2 implements EncryptionContextBuilders.GenericE
     /**
      * This object has no meaning (and will not be set or examined) by any core libraries.
      * It exists to allow custom object mappers and data access layers to pass
-     * data to {@link EncryptionMaterialsProvider}s through the {@link DynamoDBEncryptor}.
+     * data to {@link com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2}s through the {@link DynamoDBEncryptorSdk2}.
      */
     public Object getDeveloperContext() {
         return developerContext;
     }
 
     /**
-     * Returns the name of the HashKey attribute for the record to be encrypted/decrypted.
+     * @return the name of the HashKey attribute for the record to be encrypted/decrypted.
      */
     public String getHashKeyName() {
         return hashKeyName;
     }
 
     /**
-     * Returns the name of the RangeKey attribute for the record to be encrypted/decrypted.
+     * @return the name of the RangeKey attribute for the record to be encrypted/decrypted.
      */
     public String getRangeKeyName() {
         return rangeKeyName;
     }
 
+    /**
+     * @return the description for the materials used to encrypt the record
+     */
     public Map<String, String> getMaterialDescription() {
         return materialDescription;
     }
 
+    /**
+     * @return a builder with defaults values from the current EncryptionContext
+     */
     public EncryptionContextBuilders.SDK2Builders.Builder toBuilder() {
         return new BuilderImpl(this);
     }
 
+    /**
+     * @return an empty builder for EncryptionContext
+     */
     public static EncryptionContextBuilders.SDK2Builders.Builder builder() {
         return new BuilderImpl();
     }

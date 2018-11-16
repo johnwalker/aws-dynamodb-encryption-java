@@ -24,9 +24,9 @@ import java.util.Map;
 /**
  * This is a thin wrapper around the {@link WrappedMaterialsProvider}, using
  * the provided <code>encryptionKey</code> for wrapping and unwrapping the
- * record key. Please see that class for detailed documentation.
- * 
- * @author Greg Rubin 
+ * record key.
+ *
+ * @see WrappedMaterialsProvider
  */
 public class AsymmetricStaticProviderSdk2 extends WrappedMaterialsProviderSdk2 {
     public AsymmetricStaticProviderSdk2(KeyPair encryptionKey, KeyPair signingPair) {
