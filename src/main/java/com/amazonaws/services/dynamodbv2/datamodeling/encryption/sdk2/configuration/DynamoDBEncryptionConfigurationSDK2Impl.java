@@ -14,28 +14,30 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.InternalDynamoDBEncryptionConfiguration;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.InternalDynamoDBEncryptionConfigurationImpl;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 
 
-public class DynamoDBEncryptionConfigurationSDK2Impl extends InternalDynamoDBEncryptionConfiguration<EncryptionContextSDK2,
+public class DynamoDBEncryptionConfigurationSDK2Impl extends InternalDynamoDBEncryptionConfigurationImpl<EncryptionContextSDK2,
         EncryptionMaterialsProviderSdk2,
-        DynamoDBEncryptionConfigurationSDK2Impl.Builder,
-        DynamoDBEncryptionConfigurationSDK2> {
+        DynamoDBEncryptionConfigurationSDK2.Builder,
+        DynamoDBEncryptionConfigurationSDK2>
+        implements DynamoDBEncryptionConfigurationSDK2 {
 
-    DynamoDBEncryptionConfigurationSDK2Impl(Builder builder) {
-        this(builder);
+    DynamoDBEncryptionConfigurationSDK2Impl(BuilderImpl builder) {
+        super(builder);
     }
 
-    public class Builder extends InternalDynamoDBEncryptionConfigurationBuilder<EncryptionContextSDK2,
+    public class BuilderImpl extends InternalDynamoDBEncryptionConfigurationBuilderImpl<EncryptionContextSDK2,
             EncryptionMaterialsProviderSdk2,
-            Builder,
-            DynamoDBEncryptionConfigurationSDK2> {
+            DynamoDBEncryptionConfigurationSDK2.Builder,
+            DynamoDBEncryptionConfigurationSDK2>
+            implements DynamoDBEncryptionConfigurationSDK2.Builder {
+
+        @Override
         public DynamoDBEncryptionConfigurationSDK2 build() {
             return new DynamoDBEncryptionConfigurationSDK2Impl(this);
         }
-
     }
-
 }

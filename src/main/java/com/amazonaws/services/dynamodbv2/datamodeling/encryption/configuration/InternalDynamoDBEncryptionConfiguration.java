@@ -1,3 +1,17 @@
+/*
+ * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
@@ -5,156 +19,73 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
-public class InternalDynamoDBEncryptionConfiguration<T, M extends InternalEncryptionMaterialsProvider<T>,
-        B extends InternalDynamoDBEncryptionConfiguration.InternalDynamoDBEncryptionConfigurationBuilder<T, M, B, C>,
-        C extends InternalDynamoDBEncryptionConfiguration>
-        implements DynamoDBEncryptionConfiguration<T, M> {
-    private String descriptionBase;
-    private String signingAlgorithmHeader;
-    private String symModeHeader;
+public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
+    /**
+     *
+     * @return the name of the DynamoDB field used to store the signature.
+     *         Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
+     */
+    String getSignatureFieldName();
 
-    private String materialDescriptionFieldName;
-    private String signatureFieldName;
-    private Function<T, T> encryptionContextTransformer;
-    private M encryptionMaterialsProvider;
-    private T encryptionContext;
+    /**
+     * @return the name of the DynamoDB field used to store metadata used by the
+     *         DynamoDBEncryptedMapper Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
+     */
+    String getMaterialDescriptionFieldName();
 
-    private AttributeEncryptionAction defaultAttributeEncryptionAction;
-    private Map<String, AttributeEncryptionAction> attributeEncryptionActionOverrides;
+    /**
+     * @return the name of the material description field that stores the signing algorithm header
+     *         Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
+     */
+    String getSigningAlgorithmHeader();
 
-    InternalDynamoDBEncryptionConfiguration() {
-        this.descriptionBase = EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
-        this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
-        this.symModeHeader = EncryptionConstants.DEFAULT_SYM_MODE_HEADER;
+    /**
+     * @return the name of the material description field that stores the symmetric mode header
+     *         Defaults to {@value EncryptionConstants#DEFAULT_METADATA_FIELD}.
+     */
+    String getSymModeHeader();
 
-        this.materialDescriptionFieldName = EncryptionConstants.DEFAULT_METADATA_FIELD;
-        this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
-        this.encryptionContextTransformer = null;
-        this.encryptionMaterialsProvider = null;
-        this.encryptionContext = null;
-    }
+    /**
+     * @return the name of the DynamoDB field used to store the signature.
+     *          Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
+     */
+    String getDescriptionBase();
 
-    InternalDynamoDBEncryptionConfiguration(B builder) {
-        this.descriptionBase = builder.descriptionBase;
-        this.signingAlgorithmHeader = builder.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
-        this.symModeHeader = builder.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
+    /**
+     * @return Get the operator thats used to override anything applied by the DynamoDBEncryptor
+     */
+    Function<T, T> getEncryptionContextTransformer();
 
-        this.materialDescriptionFieldName = builder.materialDescriptionFieldName;
-        this.signatureFieldName = builder.signatureFieldName;
-        this.encryptionContextTransformer = builder.encryptionContextTransformer;
-        this.encryptionMaterialsProvider = builder.encryptionMaterialsProvider;
-        this.encryptionContext = builder.encryptionContext;
-    }
+    /**
+     * @return the original EncryptionContext that is supplied to the DynamoDBEncryptor
+     */
+    T getEncryptionContext();
 
-    @Override
-    public String getSignatureFieldName() {
-        return signatureFieldName;
-    }
+    /**
+     * @return the overridden actions that should be applied by the DynamoDBEncryptor to each
+     * attribute
+     */
+    Map<String, AttributeEncryptionAction> getAttributeEncryptionActionOverrides();
 
-    @Override
-    public String getMaterialDescriptionFieldName() {
-        return materialDescriptionFieldName;
-    }
+    /**
+     * @return the action that should be applied by the DynamoDBEncryptor in the event that the
+     * attribute doesn't have an AttributeAction
+     *
+     * Default action: ENCRYPT_AND_SIGN
+     */
+    AttributeEncryptionAction getDefaultAttributeEncryptionAction();
 
-    @Override
-    public String getSigningAlgorithmHeader() {
-        return signingAlgorithmHeader;
-    }
+    /**
+     * @param attributeName the name of the attribute with an associated AttributeEncryptionAction
+     * @return the AttributeEncryptionAction that should be applied to a given attribute
+     */
+    AttributeEncryptionAction getAttributeEncryptionAction(String attributeName);
 
-    @Override
-    public String getDescriptionBase() {
-        return descriptionBase;
-    }
-
-    @Override
-    public String getSymModeHeader() {
-        return symModeHeader;
-    }
-
-    @Override
-    public Function<T, T> getEncryptionContextTransformer() {
-        return encryptionContextTransformer;
-    }
-
-    @Override
-    public T getEncryptionContext() {
-        return encryptionContext;
-    }
-
-    @Override
-    public Map<String, AttributeEncryptionAction> getAttributeEncryptionActionOverrides() {
-        return attributeEncryptionActionOverrides;
-    }
-
-    @Override
-    public AttributeEncryptionAction getDefaultAttributeEncryptionAction() {
-        return defaultAttributeEncryptionAction;
-    }
-
-    @Override
-    public AttributeEncryptionAction getAttributeEncryptionAction(String attributeName) {
-        if (attributeEncryptionActionOverrides != null) {
-            return attributeEncryptionActionOverrides.getOrDefault(attributeName, getDefaultAttributeEncryptionAction());
-        }
-        return defaultAttributeEncryptionAction;
-    }
-
-    public M getEncryptionMaterialsProvider() {
-        return encryptionMaterialsProvider;
-    }
-
-    public static abstract class InternalDynamoDBEncryptionConfigurationBuilder<T, M, B extends InternalDynamoDBEncryptionConfigurationBuilder, C extends InternalDynamoDBEncryptionConfiguration> {
-
-        String descriptionBase;
-        String signatureFieldName;
-        String materialDescriptionFieldName;
-        M encryptionMaterialsProvider;
-        Function<T, T> encryptionContextTransformer;
-        T encryptionContext;
-
-        InternalDynamoDBEncryptionConfigurationBuilder() {
-            this(new InternalDynamoDBEncryptionConfiguration<T, M, B, C>());
-        }
-
-        InternalDynamoDBEncryptionConfigurationBuilder(InternalDynamoDBEncryptionConfiguration<T, M, ?, C> configuration) {
-            this.descriptionBase = configuration.getDescriptionBase();
-            this.signatureFieldName = configuration.getSignatureFieldName();
-            this.materialDescriptionFieldName = configuration.getMaterialDescriptionFieldName();
-            this.encryptionContextTransformer = configuration.getEncryptionContextTransformer();
-            this.encryptionMaterialsProvider = configuration.getEncryptionMaterialsProvider();
-            this.encryptionContext = configuration.getEncryptionContext();
-        }
-
-        public B withSignatureFieldName(String signatureFieldName) {
-            this.signatureFieldName = signatureFieldName;
-            return (B) this;
-        }
-
-        public B withMaterialDescriptionFieldName(String materialDescriptionFieldName) {
-            this.materialDescriptionFieldName = materialDescriptionFieldName;
-            return (B) this;
-        }
-
-        public B withDescriptionBase(String descriptionBase) {
-            this.descriptionBase = descriptionBase;
-            return (B) this;
-        }
-
-        public B withEncryptionContextTransformer(Function<T, T> transformer) {
-            this.encryptionContextTransformer = transformer;
-            return (B) this;
-        }
-
-        public B withEncryptionMaterialsProvider(M encryptionMaterialsProvider) {
-            this.encryptionMaterialsProvider = encryptionMaterialsProvider;
-            return (B) this;
-        }
-
-        public B withEncryptionContext(T encryptionContext) {
-            this.encryptionContext = encryptionContext;
-            return (B) this;
-        }
-        abstract C build();
-    }
+    /**
+     * @return the materials provider used to retrieve encryption materials for encrypting
+     * or decrypting the record
+     */
+    U getEncryptionMaterialsProvider();
 }

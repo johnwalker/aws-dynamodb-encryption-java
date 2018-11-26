@@ -38,8 +38,8 @@ public class EncryptionContextBuilders {
 
     /**
      *
-     * @param <B> The Builder for the public API
-     * @param <B2> The Builder for the internal API
+     * @param <B> The BuilderImpl for the public API
+     * @param <B2> The BuilderImpl for the internal API
      * @param <E> The EncryptionContext that the builder constructs
      */
     public interface GenericBuilder<B, B2 extends GenericBuilder.GenericBuilderInternalAPI<B, ?, ?>, E> {

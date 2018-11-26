@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -36,7 +35,7 @@ import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DelegatedKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfiguration;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.InternalDynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.EncryptionMaterials;
@@ -53,7 +52,7 @@ public class InternalDynamoDBEncryptor<T,
         U extends EncryptionContextBuilders.GenericEncryptionContext<T, V>,
         V extends EncryptionContextBuilders.GenericBuilder<V, W, U>,
         W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>,
-        Z extends DynamoDBEncryptionConfiguration<U, ?>> {
+        Z extends InternalDynamoDBEncryptionConfiguration<U, ?>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";

@@ -20,41 +20,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.Encry
 
 import java.util.function.UnaryOperator;
 
-public interface DynamoDBEncryptionConfigurationSDK1 extends DynamoDBEncryptionConfiguration<EncryptionContext, EncryptionMaterialsProvider> {
 
-    /**
-     * Creates a new builder with default values for signatureFieldName,
-     * materialDescriptionFieldName, descriptionBase,
-     *
-     * @return builder for
-     */
-    public static Builder builder() {
-        return new DynamoDBEncryptionConfigurationSDK1Impl.DynamoDBEncryptionConfigurationSDK1ImplBuilder();
+public interface DynamoDBEncryptionConfigurationSDK1 extends InternalDynamoDBEncryptionConfiguration<EncryptionContext, EncryptionMaterialsProvider> {
+    interface Builder extends InternalDynamoDBEncryptionConfigurationBuilder<EncryptionContext, EncryptionMaterialsProvider, Builder, DynamoDBEncryptionConfigurationSDK1> {
     }
-
-    public default Builder toBuilder() {
-        return new DynamoDBEncryptionConfigurationSDK1Impl.DynamoDBEncryptionConfigurationSDK1ImplBuilder(this);
-    }
-
-    public interface Builder {
-        /**
-         * Get the name of the DynamoDB field used to store the signature.
-         * Defaults to {@value EncryptionConstants#DEFAULT_SIGNATURE_FIELD}.
-         *
-         * @return the name of the DynamoDB field used to store the signature
-         */
-        Builder withSignatureFieldName(String signatureFieldName);
-
-        Builder withMaterialDescriptionFieldName(String descriptionFieldName);
-
-        Builder withDescriptionBase(String descriptionBase);
-
-        Builder withEncryptionContextTransformer(UnaryOperator<EncryptionContext> transformer);
-
-        Builder withEncryptionMaterialsProvider(EncryptionMaterialsProvider encryptionMaterialsProvider);
-
-        DynamoDBEncryptionConfigurationSDK1 build();
-    }
-
-
 }

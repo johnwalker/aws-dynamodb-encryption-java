@@ -92,7 +92,7 @@ public class InternalEncryptionContext<T, X extends InternalEncryptionContext.Bu
     }
 
     /**
-     * Builder class for {@link EncryptionContext}.
+     * BuilderImpl class for {@link EncryptionContext}.
      * Mutable objects (other than <code>developerContext</code>) will undergo
      * a defensive copy prior to being stored in the builder.
      *
