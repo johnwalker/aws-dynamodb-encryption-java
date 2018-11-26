@@ -24,4 +24,8 @@ public interface DynamoDBEncryptionConfigurationSDK2 extends InternalDynamoDBEnc
     interface Builder extends InternalDynamoDBEncryptionConfigurationBuilder<EncryptionContextSDK2, EncryptionMaterialsProviderSdk2, Builder, DynamoDBEncryptionConfigurationSDK2> {
 
     }
+
+    static DynamoDBEncryptionConfigurationSDK2.Builder builder() {
+        return DynamoDBEncryptionConfigurationSDK2Impl.builder();
+    }
 }

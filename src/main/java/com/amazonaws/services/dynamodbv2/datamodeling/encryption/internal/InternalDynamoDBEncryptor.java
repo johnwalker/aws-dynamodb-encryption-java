@@ -52,7 +52,7 @@ public class InternalDynamoDBEncryptor<T,
         U extends EncryptionContextBuilders.GenericEncryptionContext<T, V>,
         V extends EncryptionContextBuilders.GenericBuilder<V, W, U>,
         W extends EncryptionContextBuilders.GenericBuilder.GenericBuilderInternalAPI<V, W, T>,
-        Z extends InternalDynamoDBEncryptionConfiguration<U, ?>> {
+        Z extends InternalDynamoDBEncryptionConfiguration<U, ?, ?>> {
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String SYMMETRIC_ENCRYPTION_MODE = "/CBC/PKCS5Padding";
