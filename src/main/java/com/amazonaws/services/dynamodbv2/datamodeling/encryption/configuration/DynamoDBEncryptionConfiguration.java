@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConst
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
@@ -55,7 +56,7 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
     /**
      * @return Get the operator thats used to override anything applied by the DynamoDBEncryptor
      */
-    UnaryOperator<T> getEncryptionContextTransformer();
+    Function<T, T> getEncryptionContextTransformer();
 
     /**
      * @return the original EncryptionContext that is supplied to the DynamoDBEncryptor
@@ -66,16 +67,21 @@ public interface DynamoDBEncryptionConfiguration<T, U extends InternalEncryption
      * @return the overridden actions that should be applied by the DynamoDBEncryptor to each
      * attribute
      */
-    Map<String, AttributeEncryptionActions> getAttributeEncryptionActions();
+    Map<String, AttributeEncryptionAction> getAttributeEncryptionActionOverrides();
 
     /**
      * @return the action that should be applied by the DynamoDBEncryptor in the event that the
      * attribute doesn't have an AttributeAction
      *
-     * Default action in SDK1: DO_NOTHING for legacy reasons
-     * Default action in SDK2: ENCRYPT_AND_SIGN
+     * Default action: ENCRYPT_AND_SIGN
      */
-    AttributeEncryptionActions getDefaultAttributeEncryptionAction();
+    AttributeEncryptionAction getDefaultAttributeEncryptionAction();
+
+    /**
+     * @param attributeName the name of the attribute with an associated AttributeEncryptionAction
+     * @return the AttributeEncryptionAction that should be applied to a given attribute
+     */
+    AttributeEncryptionAction getAttributeEncryptionAction(String attributeName);
 
     /**
      * @return the materials provider used to retrieve encryption materials for encrypting

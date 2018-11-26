@@ -1,9 +1,9 @@
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
 /**
- * AttributeEncryptionActions is a class used to decide what to do with each attribute
+ * AttributeEncryptionAction is a class used to decide what to do with each attribute
  */
-public enum AttributeEncryptionActions {
+public enum AttributeEncryptionAction {
     /**
      * Encrypt and sign the attribute
      */

@@ -14,69 +14,28 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.InternalDynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.EncryptionContextSDK2;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.providers.EncryptionMaterialsProviderSdk2;
 
-import java.util.function.UnaryOperator;
 
-public class DynamoDBEncryptionConfigurationSDK2Impl implements DynamoDBEncryptionConfigurationSDK2 {
+public class DynamoDBEncryptionConfigurationSDK2Impl extends InternalDynamoDBEncryptionConfiguration<EncryptionContextSDK2,
+        EncryptionMaterialsProviderSdk2,
+        DynamoDBEncryptionConfigurationSDK2Impl.Builder,
+        DynamoDBEncryptionConfigurationSDK2> {
 
-    private String symModeHeader;
-    private String signatureFieldName;
-    private String materialDescriptionFieldName;
-    private String signingAlgorithmHeader;
-    private String descriptionBase;
-    private UnaryOperator<EncryptionContextSDK2> encryptionContextTransformer;
-    private EncryptionMaterialsProviderSdk2 encryptionMaterialsProviderSdk2;
-
-    public DynamoDBEncryptionConfigurationSDK2Impl() {
-        this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
-        this.materialDescriptionFieldName = EncryptionConstants.DEFAULT_METADATA_FIELD;
-        this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
-        this.symModeHeader = EncryptionConstants.DEFAULT_SYM_MODE_HEADER;
-        this.descriptionBase = EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
-        this.encryptionContextTransformer = null;
-        this.encryptionMaterialsProviderSdk2 = null;
+    DynamoDBEncryptionConfigurationSDK2Impl(Builder builder) {
+        this(builder);
     }
 
-    @Override
-    public String getSignatureFieldName() {
-        return signatureFieldName;
+    public class Builder extends InternalDynamoDBEncryptionConfigurationBuilder<EncryptionContextSDK2,
+            EncryptionMaterialsProviderSdk2,
+            Builder,
+            DynamoDBEncryptionConfigurationSDK2> {
+        public DynamoDBEncryptionConfigurationSDK2 build() {
+            return new DynamoDBEncryptionConfigurationSDK2Impl(this);
+        }
+
     }
 
-    @Override
-    public String getMaterialDescriptionFieldName() {
-        return materialDescriptionFieldName;
-    }
-    @Override
-    public String getSigningAlgorithmHeader() {
-        return signingAlgorithmHeader;
-    }
-
-    @Override
-    public String getDescriptionBase() {
-        return descriptionBase;
-    }
-
-    @Override
-    public String getSymModeHeader() {
-        return symModeHeader;
-    }
-
-    public void setDescriptionBase(String descriptionBase) {
-        this.descriptionBase = descriptionBase;
-        this.symModeHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
-        this.signingAlgorithmHeader = descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
-    }
-
-    @Override
-    public UnaryOperator<EncryptionContextSDK2> getEncryptionContextTransformer() {
-        return encryptionContextTransformer;
-    }
-
-    @Override
-    public EncryptionMaterialsProviderSdk2 getEncryptionMaterialsProvider() {
-        return encryptionMaterialsProviderSdk2;
-    }
 }
