@@ -243,7 +243,7 @@ public class InternalDynamoDBEncryptor<T,
                 .publicAPI()
                 .build();
 
-        UnaryOperator<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
+        Function<U, U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
         if(encryptionContextTransformer != null) {
             context = encryptionContextTransformer.apply(context);
         }
@@ -301,7 +301,7 @@ public class InternalDynamoDBEncryptor<T,
         // Copy the attribute values into the context
         context = context.toBuilder().internalAPI().withAttributeValues(itemAttributes).publicAPI().build();
 
-        UnaryOperator<U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
+        Function<U, U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextTransformer();
         if(encryptionContextTransformer != null) {
             context = encryptionContextTransformer.apply(context);
         }
