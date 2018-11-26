@@ -14,14 +14,15 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
 
-import java.util.function.UnaryOperator;
 
-
-public interface DynamoDBEncryptionConfigurationSDK1 extends InternalDynamoDBEncryptionConfiguration<EncryptionContext, EncryptionMaterialsProvider> {
+public interface DynamoDBEncryptionConfigurationSDK1 extends InternalDynamoDBEncryptionConfiguration<EncryptionContext, EncryptionMaterialsProvider, DynamoDBEncryptionConfigurationSDK1.Builder> {
     interface Builder extends InternalDynamoDBEncryptionConfigurationBuilder<EncryptionContext, EncryptionMaterialsProvider, Builder, DynamoDBEncryptionConfigurationSDK1> {
+    }
+
+    static Builder builder() {
+        return DynamoDBEncryptionConfigurationSDK1Impl.builder();
     }
 }

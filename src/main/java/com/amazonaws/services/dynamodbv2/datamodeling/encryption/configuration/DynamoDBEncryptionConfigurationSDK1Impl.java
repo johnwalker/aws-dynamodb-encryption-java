@@ -26,11 +26,23 @@ public class DynamoDBEncryptionConfigurationSDK1Impl extends InternalDynamoDBEnc
         DynamoDBEncryptionConfigurationSDK1>
         implements DynamoDBEncryptionConfigurationSDK1 {
 
+    public DynamoDBEncryptionConfigurationSDK1Impl() {
+    }
+
+    public static BuilderImpl builder() {
+        return new BuilderImpl();
+    }
+
     DynamoDBEncryptionConfigurationSDK1Impl(BuilderImpl builder) {
         super(builder);
     }
 
-    public class BuilderImpl extends InternalDynamoDBEncryptionConfigurationBuilderImpl<EncryptionContext,
+    @Override
+    public Builder toBuilder() {
+        return new BuilderImpl();
+    }
+
+    public static class BuilderImpl extends InternalDynamoDBEncryptionConfigurationBuilderImpl<EncryptionContext,
             EncryptionMaterialsProvider,
             DynamoDBEncryptionConfigurationSDK1.Builder,
             DynamoDBEncryptionConfigurationSDK1>

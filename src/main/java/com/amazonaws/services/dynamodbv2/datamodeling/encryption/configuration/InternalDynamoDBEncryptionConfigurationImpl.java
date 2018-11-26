@@ -6,10 +6,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 import java.util.Map;
 import java.util.function.Function;
 
-public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends InternalEncryptionMaterialsProvider<T>,
+abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends InternalEncryptionMaterialsProvider<T>,
         B extends InternalDynamoDBEncryptionConfigurationBuilder<T, M, ?, ?>,
         C extends InternalDynamoDBEncryptionConfiguration>
-        implements InternalDynamoDBEncryptionConfiguration<T, M> {
+        implements InternalDynamoDBEncryptionConfiguration<T, M, B> {
     private String descriptionBase;
     private String signingAlgorithmHeader;
     private String symModeHeader;
@@ -107,7 +107,7 @@ public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends InternalEn
     public static abstract class InternalDynamoDBEncryptionConfigurationBuilderImpl<T,
             M extends InternalEncryptionMaterialsProvider<T>,
             B extends InternalDynamoDBEncryptionConfigurationBuilder,
-            C extends InternalDynamoDBEncryptionConfiguration<T, M>>
+            C extends InternalDynamoDBEncryptionConfiguration<T, M, B>>
             implements InternalDynamoDBEncryptionConfigurationBuilder<T, M, B, C> {
 
         String descriptionBase;

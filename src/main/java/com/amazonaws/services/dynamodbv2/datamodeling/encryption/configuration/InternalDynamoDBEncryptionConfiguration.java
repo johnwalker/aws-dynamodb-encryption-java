@@ -19,9 +19,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.Intern
 
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
-public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>> {
+public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEncryptionMaterialsProvider<T>, B> {
     /**
      *
      * @return the name of the DynamoDB field used to store the signature.
@@ -88,4 +87,6 @@ public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEn
      * or decrypting the record
      */
     U getEncryptionMaterialsProvider();
+
+    B toBuilder();
 }

@@ -7,7 +7,7 @@ import java.util.function.Function;
 public interface InternalDynamoDBEncryptionConfigurationBuilder<T,
         M extends InternalEncryptionMaterialsProvider<T>,
         B extends InternalDynamoDBEncryptionConfigurationBuilder,
-        C extends InternalDynamoDBEncryptionConfiguration<T, M>> {
+        C extends InternalDynamoDBEncryptionConfiguration<T, M, B>> {
     B withSignatureFieldName(String signatureFieldName);
 
     B withMaterialDescriptionFieldName(String materialDescriptionFieldName);
