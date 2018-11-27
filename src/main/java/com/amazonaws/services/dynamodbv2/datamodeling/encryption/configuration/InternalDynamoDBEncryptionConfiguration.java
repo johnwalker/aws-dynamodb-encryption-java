@@ -55,7 +55,7 @@ public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEn
     /**
      * @return Get the operator thats used to override anything applied by the DynamoDBEncryptor
      */
-    Function<T, T> getEncryptionContextTransformer();
+    Function<T, T> getEncryptionContextOverrideOperator();
 
     /**
      * @return the original EncryptionContext that is supplied to the DynamoDBEncryptor

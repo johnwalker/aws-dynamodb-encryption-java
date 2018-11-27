@@ -42,7 +42,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
         assertEquals("amzn-ddb-map-", configuration.getDescriptionBase());
         assertEquals("amzn-ddb-map-sym-mode", configuration.getSymModeHeader());
         assertEquals("amzn-ddb-map-signingAlg", configuration.getSigningAlgorithmHeader());
-        assertNull(configuration.getEncryptionContextTransformer());
+        assertNull(configuration.getEncryptionContextOverrideOperator());
         assertNull(configuration.getEncryptionMaterialsProvider());
 
     }
@@ -83,7 +83,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
         assertEquals("bobbydroptables", configuration.getMaterialDescriptionFieldName());
         assertEquals("signaturename", configuration.getSignatureFieldName());
         assertEquals(encryptionMaterialsProviderStub, configuration.getEncryptionMaterialsProvider());
-        assertEquals(encryptionContextTransformerStub, configuration.getEncryptionContextTransformer());
+        assertEquals(encryptionContextTransformerStub, configuration.getEncryptionContextOverrideOperator());
 
     }
 
@@ -104,7 +104,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
         assertEquals("bobbydroptables", newlybuilt.getMaterialDescriptionFieldName());
         assertEquals("signaturename", newlybuilt.getSignatureFieldName());
         assertEquals(encryptionMaterialsProviderStub, newlybuilt.getEncryptionMaterialsProvider());
-        assertEquals(encryptionContextTransformerStub, newlybuilt.getEncryptionContextTransformer());
+        assertEquals(encryptionContextTransformerStub, newlybuilt.getEncryptionContextOverrideOperator());
     }
 
 }

@@ -73,7 +73,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
     }
 
     @Override
-    public Function<T, T> getEncryptionContextTransformer() {
+    public Function<T, T> getEncryptionContextOverrideOperator() {
         return encryptionContextTransformer;
     }
 
@@ -125,7 +125,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             this.descriptionBase = configuration.getDescriptionBase();
             this.signatureFieldName = configuration.getSignatureFieldName();
             this.materialDescriptionFieldName = configuration.getMaterialDescriptionFieldName();
-            this.encryptionContextTransformer = configuration.getEncryptionContextTransformer();
+            this.encryptionContextTransformer = configuration.getEncryptionContextOverrideOperator();
             this.encryptionMaterialsProvider = configuration.getEncryptionMaterialsProvider();
             this.encryptionContext = configuration.getEncryptionContext();
         }
