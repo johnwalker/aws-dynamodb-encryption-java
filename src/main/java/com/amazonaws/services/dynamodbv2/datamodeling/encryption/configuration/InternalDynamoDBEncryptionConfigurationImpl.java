@@ -117,10 +117,6 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         Function<T, T> encryptionContextOverrideOperator;
         T encryptionContext;
 
-        public InternalDynamoDBEncryptionConfigurationBuilderImpl() {
-
-        }
-
         public InternalDynamoDBEncryptionConfigurationBuilderImpl(C configuration) {
             this.descriptionBase = configuration.getDescriptionBase();
             this.signatureFieldName = configuration.getSignatureFieldName();

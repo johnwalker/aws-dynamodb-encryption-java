@@ -14,12 +14,8 @@
  */
 package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionContext;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.providers.EncryptionMaterialsProvider;
-import com.amazonaws.services.dynamodbv2.datamodeling.encryption.sdk2.configuration.DynamoDBEncryptionConfigurationSDK2Impl;
-
-import java.util.function.UnaryOperator;
 
 public class DynamoDBEncryptionConfigurationSDK1Impl extends InternalDynamoDBEncryptionConfigurationImpl<EncryptionContext,
         EncryptionMaterialsProvider,
@@ -27,15 +23,14 @@ public class DynamoDBEncryptionConfigurationSDK1Impl extends InternalDynamoDBEnc
         DynamoDBEncryptionConfigurationSDK1>
         implements DynamoDBEncryptionConfigurationSDK1 {
 
-    public DynamoDBEncryptionConfigurationSDK1Impl() {
-    }
+    private DynamoDBEncryptionConfigurationSDK1Impl() {}
 
-    public static BuilderImpl builder() {
-        return new BuilderImpl(new DynamoDBEncryptionConfigurationSDK1Impl());
-    }
-
-    DynamoDBEncryptionConfigurationSDK1Impl(BuilderImpl builder) {
+    private DynamoDBEncryptionConfigurationSDK1Impl(BuilderImpl builder) {
         super(builder);
+    }
+
+    public static Builder builder() {
+        return new BuilderImpl(new DynamoDBEncryptionConfigurationSDK1Impl());
     }
 
     @Override
@@ -49,10 +44,9 @@ public class DynamoDBEncryptionConfigurationSDK1Impl extends InternalDynamoDBEnc
             DynamoDBEncryptionConfigurationSDK1>
             implements DynamoDBEncryptionConfigurationSDK1.Builder {
 
-        public BuilderImpl(DynamoDBEncryptionConfigurationSDK1Impl configuration) {
+        BuilderImpl(DynamoDBEncryptionConfigurationSDK1Impl configuration) {
             super(configuration);
         }
-
 
         @Override
         public DynamoDBEncryptionConfigurationSDK1 build() {

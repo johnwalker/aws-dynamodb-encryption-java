@@ -25,12 +25,14 @@ public class DynamoDBEncryptionConfigurationSDK2Impl extends InternalDynamoDBEnc
         DynamoDBEncryptionConfigurationSDK2>
         implements DynamoDBEncryptionConfigurationSDK2 {
 
-    DynamoDBEncryptionConfigurationSDK2Impl(BuilderImpl builder) {
+    private DynamoDBEncryptionConfigurationSDK2Impl() {}
+
+    private DynamoDBEncryptionConfigurationSDK2Impl(BuilderImpl builder) {
         super(builder);
     }
 
-    public static BuilderImpl builder() {
-        return new BuilderImpl();
+    public static Builder builder() {
+        return new BuilderImpl(new DynamoDBEncryptionConfigurationSDK2Impl());
     }
 
     @Override
@@ -43,10 +45,6 @@ public class DynamoDBEncryptionConfigurationSDK2Impl extends InternalDynamoDBEnc
             DynamoDBEncryptionConfigurationSDK2.Builder,
             DynamoDBEncryptionConfigurationSDK2>
             implements DynamoDBEncryptionConfigurationSDK2.Builder {
-
-        public BuilderImpl() {
-
-        }
 
         public BuilderImpl(DynamoDBEncryptionConfigurationSDK2Impl configurationSDK2) {
             super(configurationSDK2);
