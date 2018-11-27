@@ -14,7 +14,7 @@ public interface InternalDynamoDBEncryptionConfigurationBuilder<T,
 
     B withDescriptionBase(String descriptionBase);
 
-    B withEncryptionContextTransformer(Function<T, T> transformer);
+    B withEncryptionContextOverrideOperator(Function<T, T> encryptionContextOverrideOperator);
 
     B withEncryptionMaterialsProvider(M encryptionMaterialsProvider);
 

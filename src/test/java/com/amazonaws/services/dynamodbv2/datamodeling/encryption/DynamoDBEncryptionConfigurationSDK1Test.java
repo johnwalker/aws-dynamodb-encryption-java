@@ -75,7 +75,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
                 .withMaterialDescriptionFieldName("bobbydroptables")
                 .withSignatureFieldName("signaturename")
                 .withEncryptionMaterialsProvider(encryptionMaterialsProviderStub)
-                .withEncryptionContextTransformer(encryptionContextTransformerStub)
+                .withEncryptionContextOverrideOperator(encryptionContextTransformerStub)
                 .build();
 
 
@@ -95,7 +95,7 @@ public class DynamoDBEncryptionConfigurationSDK1Test {
                 .withMaterialDescriptionFieldName("bobbydroptables")
                 .withSignatureFieldName("signaturename")
                 .withEncryptionMaterialsProvider(encryptionMaterialsProviderStub)
-                .withEncryptionContextTransformer(encryptionContextTransformerStub)
+                .withEncryptionContextOverrideOperator(encryptionContextTransformerStub)
                 .build();
 
         DynamoDBEncryptionConfigurationSDK1 newlybuilt = configuration.toBuilder().build();

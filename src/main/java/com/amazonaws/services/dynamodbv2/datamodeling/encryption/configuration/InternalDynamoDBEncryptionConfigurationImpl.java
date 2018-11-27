@@ -42,7 +42,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
 
         this.materialDescriptionFieldName = builder.materialDescriptionFieldName;
         this.signatureFieldName = builder.signatureFieldName;
-        this.encryptionContextTransformer = builder.encryptionContextTransformer;
+        this.encryptionContextTransformer = builder.encryptionContextOverrideOperator;
         this.encryptionMaterialsProvider = builder.encryptionMaterialsProvider;
         this.encryptionContext = builder.encryptionContext;
     }
@@ -114,7 +114,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         String signatureFieldName;
         String materialDescriptionFieldName;
         M encryptionMaterialsProvider;
-        Function<T, T> encryptionContextTransformer;
+        Function<T, T> encryptionContextOverrideOperator;
         T encryptionContext;
 
         public InternalDynamoDBEncryptionConfigurationBuilderImpl() {
@@ -125,7 +125,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             this.descriptionBase = configuration.getDescriptionBase();
             this.signatureFieldName = configuration.getSignatureFieldName();
             this.materialDescriptionFieldName = configuration.getMaterialDescriptionFieldName();
-            this.encryptionContextTransformer = configuration.getEncryptionContextOverrideOperator();
+            this.encryptionContextOverrideOperator = configuration.getEncryptionContextOverrideOperator();
             this.encryptionMaterialsProvider = configuration.getEncryptionMaterialsProvider();
             this.encryptionContext = configuration.getEncryptionContext();
         }
@@ -149,8 +149,8 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         }
 
         @Override
-        public B withEncryptionContextTransformer(Function<T, T> transformer) {
-            this.encryptionContextTransformer = transformer;
+        public B withEncryptionContextOverrideOperator(Function<T, T> encryptionContextOverrideOperator) {
+            this.encryptionContextOverrideOperator = encryptionContextOverrideOperator;
             return (B) this;
         }
 
@@ -165,6 +165,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             this.encryptionContext = encryptionContext;
             return (B) this;
         }
+
         @Override
         public C build() { return null; }
     }
