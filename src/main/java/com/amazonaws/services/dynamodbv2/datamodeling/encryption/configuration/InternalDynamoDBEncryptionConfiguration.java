@@ -72,15 +72,8 @@ public interface InternalDynamoDBEncryptionConfiguration<T, U extends InternalEn
      * @return the action that should be applied by the DynamoDBEncryptor in the event that the
      * attribute doesn't have an AttributeAction
      *
-     * Default action: ENCRYPT_AND_SIGN
      */
     AttributeEncryptionAction getDefaultAttributeEncryptionAction();
-
-    /**
-     * @param attributeName the name of the attribute with an associated AttributeEncryptionAction
-     * @return the AttributeEncryptionAction that should be applied to a given attribute
-     */
-    AttributeEncryptionAction getAttributeEncryptionAction(String attributeName);
 
     /**
      * @return the materials provider used to retrieve encryption materials for encrypting

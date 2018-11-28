@@ -3,6 +3,10 @@ package com.amazonaws.services.dynamodbv2.datamodeling.internal;
 import java.security.SecureRandom;
 
 public class Utils {
+    private Utils() {
+        // Prevent instantiation
+    }
+
     private static final ThreadLocal<SecureRandom> RND = new ThreadLocal<SecureRandom>() {
         @Override
         protected SecureRandom initialValue() {
@@ -11,10 +15,6 @@ public class Utils {
             return result;
         }
     };
-
-    private Utils() {
-        // Prevent instantiation
-    }
 
     public static SecureRandom getRng() {
         return RND.get();

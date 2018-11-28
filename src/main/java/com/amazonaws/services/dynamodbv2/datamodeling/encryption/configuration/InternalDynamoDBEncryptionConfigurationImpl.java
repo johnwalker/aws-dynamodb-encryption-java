@@ -2,9 +2,11 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
+import com.amazonaws.services.dynamodbv2.datamodeling.internal.Preconditions;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends InternalEncryptionMaterialsProvider<T>,
@@ -28,24 +30,26 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         this.descriptionBase = EncryptionConstants.DEFAULT_DESCRIPTION_BASE;
         this.signingAlgorithmHeader = EncryptionConstants.DEFAULT_SIGNING_ALGORITHM_HEADER;
         this.symModeHeader = EncryptionConstants.DEFAULT_SYM_MODE_HEADER;
-
         this.materialDescriptionFieldName = EncryptionConstants.DEFAULT_METADATA_FIELD;
         this.signatureFieldName = EncryptionConstants.DEFAULT_SIGNATURE_FIELD;
-        this.encryptionContextTransformer = null;
-        this.encryptionMaterialsProvider = null;
-        this.encryptionContext = null;
+        this.defaultAttributeEncryptionAction = AttributeEncryptionAction.ENCRYPT_AND_SIGN;
     }
 
-    protected InternalDynamoDBEncryptionConfigurationImpl(InternalDynamoDBEncryptionConfigurationBuilderImpl<T, M, B, ?> builder) {
+    protected InternalDynamoDBEncryptionConfigurationImpl(final InternalDynamoDBEncryptionConfigurationBuilderImpl<T, M, B, ?> builder) {
         this.descriptionBase = builder.descriptionBase;
         this.signingAlgorithmHeader = builder.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SIGNING_ALG;
         this.symModeHeader = builder.descriptionBase + EncryptionConstants.HELPER_CONSTANT_SYM_MODE;
 
         this.materialDescriptionFieldName = builder.materialDescriptionFieldName;
         this.signatureFieldName = builder.signatureFieldName;
-        this.encryptionContextTransformer = builder.encryptionContextOverrideOperator;
         this.encryptionMaterialsProvider = builder.encryptionMaterialsProvider;
+        this.defaultAttributeEncryptionAction = builder.defaultAttributeEncryptionAction;
+
+        // FIXME don't do a shallow copy
         this.encryptionContext = builder.encryptionContext;
+        this.attributeEncryptionActionOverrides = Optional.ofNullable(builder.attributeEncryptionActionOverrides)
+                .map(HashMap::new).orElse(null);
+        this.encryptionContextTransformer = builder.encryptionContextOverrideOperator;
     }
 
     @Override
@@ -93,14 +97,6 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         return defaultAttributeEncryptionAction;
     }
 
-    @Override
-    public AttributeEncryptionAction getAttributeEncryptionAction(String attributeName) {
-        if (attributeEncryptionActionOverrides != null) {
-            return attributeEncryptionActionOverrides.getOrDefault(attributeName, getDefaultAttributeEncryptionAction());
-        }
-        return defaultAttributeEncryptionAction;
-    }
-
     public M getEncryptionMaterialsProvider() {
         return encryptionMaterialsProvider;
     }
@@ -128,6 +124,11 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             this.encryptionContextOverrideOperator = configuration.getEncryptionContextOverrideOperator();
             this.encryptionMaterialsProvider = configuration.getEncryptionMaterialsProvider();
             this.encryptionContext = configuration.getEncryptionContext();
+            this.attributeEncryptionActionOverrides = Optional.ofNullable(
+                    configuration.getAttributeEncryptionActionOverrides())
+                    .map(HashMap::new)
+                    .orElse(null);
+            this.defaultAttributeEncryptionAction = configuration.getDefaultAttributeEncryptionAction();
         }
 
         @Override
@@ -167,18 +168,20 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         }
 
         @Override
-        public B withAttributeEncryptionActionOverrides(Map<String, AttributeEncryptionAction> encryptionActionOverrides) {
+        public B withAttributeEncryptionActionOverrides(final Map<String, AttributeEncryptionAction> encryptionActionOverrides) {
             this.attributeEncryptionActionOverrides = new HashMap<>(encryptionActionOverrides);
             return (B) this;
         }
 
         @Override
-        public B withDefaultAttributeEncryptionAction(AttributeEncryptionAction defaultAttributeEncryptionAction) {
+        public B withDefaultAttributeEncryptionAction(final AttributeEncryptionAction defaultAttributeEncryptionAction) {
+            Preconditions.assertNotNull(defaultAttributeEncryptionAction, "defaultAttributeEncryptionAction must be non-null");
             this.defaultAttributeEncryptionAction = defaultAttributeEncryptionAction;
             return (B) this;
         }
 
-        // FIXME
+        // FIXME: either refactor the interface
+        // certainly remove a null build
         @Override
         public C build() { return null; }
     }

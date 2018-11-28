@@ -243,7 +243,7 @@ public class InternalDynamoDBEncryptor<T,
                 .build();
 
         Function<U, U> encryptionContextTransformer = encryptionConfiguration.getEncryptionContextOverrideOperator();
-        if(encryptionContextTransformer != null) {
+        if (encryptionContextTransformer != null) {
             context = encryptionContextTransformer.apply(context);
         }
 
