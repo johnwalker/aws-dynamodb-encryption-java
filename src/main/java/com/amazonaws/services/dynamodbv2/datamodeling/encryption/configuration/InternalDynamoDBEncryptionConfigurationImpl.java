@@ -3,6 +3,7 @@ package com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionConstants;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalEncryptionMaterialsProvider;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -110,12 +111,15 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             C extends InternalDynamoDBEncryptionConfiguration<T, M, B>>
             implements InternalDynamoDBEncryptionConfigurationBuilder<T, M, B, C> {
 
+        // FIXME double check defaults
         String descriptionBase;
         String signatureFieldName;
         String materialDescriptionFieldName;
         M encryptionMaterialsProvider;
         Function<T, T> encryptionContextOverrideOperator;
         T encryptionContext;
+        Map<String, AttributeEncryptionAction> attributeEncryptionActionOverrides;
+        AttributeEncryptionAction defaultAttributeEncryptionAction;
 
         public InternalDynamoDBEncryptionConfigurationBuilderImpl(C configuration) {
             this.descriptionBase = configuration.getDescriptionBase();
@@ -162,6 +166,19 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
             return (B) this;
         }
 
+        @Override
+        public B withAttributeEncryptionActionOverrides(Map<String, AttributeEncryptionAction> encryptionActionOverrides) {
+            this.attributeEncryptionActionOverrides = new HashMap<>(encryptionActionOverrides);
+            return (B) this;
+        }
+
+        @Override
+        public B withDefaultAttributeEncryptionAction(AttributeEncryptionAction defaultAttributeEncryptionAction) {
+            this.defaultAttributeEncryptionAction = defaultAttributeEncryptionAction;
+            return (B) this;
+        }
+
+        // FIXME
         @Override
         public C build() { return null; }
     }
