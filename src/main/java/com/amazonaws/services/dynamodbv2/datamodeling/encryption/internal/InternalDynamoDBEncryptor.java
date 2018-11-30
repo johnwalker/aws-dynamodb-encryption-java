@@ -35,6 +35,7 @@ import javax.crypto.spec.IvParameterSpec;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.DelegatedKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.AttributeEncryptionAction;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.InternalDynamoDBEncryptionConfiguration;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.EncryptionFlags;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.materials.DecryptionMaterials;
@@ -75,150 +76,12 @@ public class InternalDynamoDBEncryptor<T,
         this.descriptionMarshaller = descriptionMarshaller;
     }
 
-    /**
-     * Returns a decrypted version of the provided DynamoDb record. The signature is verified across
-     * all provided fields. All fields (except those listed in <code>doNotEncrypt</code> are
-     * decrypted.
-     * 
-     * @param itemAttributes
-     *            the DynamoDbRecord
-     * @param context
-     *            additional information used to successfully select the encryption materials and
-     *            decrypt the data. This should include (at least) the tableName and the
-     *            materialDescription.
-     * @param doNotDecrypt
-     *            those fields which should not be encrypted
-     * @return a plaintext version of the DynamoDb record
-     * @throws SignatureException
-     *             if the signature is invalid or cannot be verified
-     * @throws GeneralSecurityException
-     */
-    public Map<String, T> decryptAllFieldsExcept(Map<String, T> itemAttributes,
-                                                 U context,
-                                                 Z encryptionConfiguration,
-                                                 String... doNotDecrypt) throws GeneralSecurityException {
-        return decryptAllFieldsExcept(itemAttributes, context, encryptionConfiguration, Arrays.asList(doNotDecrypt));
-    }
-    
-    /**
-     * @see #decryptAllFieldsExcept(Map, U, Z, String...)
-     */
-    public Map<String, T> decryptAllFieldsExcept(
-            Map<String, T> itemAttributes,
-            U context,
-            Z encryptionConfiguration,
-            Collection<String> doNotDecrypt)
-            throws GeneralSecurityException {
-        Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
-                itemAttributes, encryptionConfiguration, doNotDecrypt);
-        return decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
-    }
-
-    /**
-     * Returns the decryption flags for all item attributes except for those
-     * explicitly specified to be excluded.
-     * @param doNotDecrypt fields to be excluded
-     */
-    public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
-            Map<String, T> itemAttributes, Z encryptionConfiguration,
-            String ... doNotDecrypt) {
-        return allDecryptionFlagsExcept(itemAttributes, encryptionConfiguration, Arrays.asList(doNotDecrypt));
-    }
-
-    /**
-     * Returns the decryption flags for all item attributes except for those
-     * explicitly specified to be excluded.
-     * @param doNotDecrypt fields to be excluded
-     */
-    public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
-            Map<String, T> itemAttributes,
-            Z encryptionConfiguration,
-            Collection<String> doNotDecrypt) {
-        Map<String, Set<EncryptionFlags>> attributeFlags = new HashMap<String, Set<EncryptionFlags>>();
-
-        for (String fieldName : doNotDecrypt) {
-            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
-        }
-
-        for (String fieldName : itemAttributes.keySet()) {
-            if (!attributeFlags.containsKey(fieldName) && 
-                    !fieldName.equals(encryptionConfiguration.getMaterialDescriptionFieldName()) &&
-                    !fieldName.equals(encryptionConfiguration.getSignatureFieldName())) {
-                attributeFlags.put(fieldName,
-                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
-            }
-        }
-        return attributeFlags;
-    }
-    
-    /**
-     * Returns an encrypted version of the provided DynamoDb record. All fields are signed. All fields
-     * (except those listed in <code>doNotEncrypt</code>) are encrypted.
-     * @param itemAttributes a DynamoDb Record
-     * @param context
-     *            additional information used to successfully select the encryption materials and
-     *            encrypt the data. This should include (at least) the tableName.
-     * @param doNotEncrypt those fields which should not be encrypted 
-     * @return a ciphertext version of the DynamoDb record
-     * @throws GeneralSecurityException
-     */
-    public Map<String, T> encryptAllFieldsExcept(Map<String, T> itemAttributes,
-            U context, Z encryptionConfiguration, String... doNotEncrypt) throws GeneralSecurityException {
-        
-        return encryptAllFieldsExcept(itemAttributes, context, encryptionConfiguration, Arrays.asList(doNotEncrypt));
-    }
-    
-    public Map<String, T> encryptAllFieldsExcept(
-            Map<String, T> itemAttributes,
-            U context,
-            Z encryptionConfiguration,
-            Collection<String> doNotEncrypt)
-            throws GeneralSecurityException {
-        Map<String, Set<EncryptionFlags>> attributeFlags = allEncryptionFlagsExcept(
-                itemAttributes, doNotEncrypt);
-        return encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
-    }
-
-    /**
-     * Returns the encryption flags for all item attributes except for those
-     * explicitly specified to be excluded.
-     * @param doNotEncrypt fields to be excluded
-     */
-    public Map<String, Set<EncryptionFlags>> allEncryptionFlagsExcept(
-            Map<String, T> itemAttributes,
-            String ...doNotEncrypt) {
-        return allEncryptionFlagsExcept(itemAttributes, Arrays.asList(doNotEncrypt));
-    }
-
-    /**
-     * Returns the encryption flags for all item attributes except for those
-     * explicitly specified to be excluded.
-     * @param doNotEncrypt fields to be excluded
-     */
-    public Map<String, Set<EncryptionFlags>> allEncryptionFlagsExcept(
-            Map<String, T> itemAttributes,
-            Collection<String> doNotEncrypt) {
-        Map<String, Set<EncryptionFlags>> attributeFlags =
-            new HashMap<String, Set<EncryptionFlags>>();
-        for (String fieldName : doNotEncrypt) {
-            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
-        }
-
-        for (String fieldName : itemAttributes.keySet()) {
-            if (!attributeFlags.containsKey(fieldName)) {
-                attributeFlags.put(fieldName,
-                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
-            }
-        }
-        return attributeFlags;
-    }
-
     public Map<String, T> decryptRecord(
             Map<String, T> itemAttributes,
-            Map<String, Set<EncryptionFlags>> attributeFlags,
+            Map<String, AttributeEncryptionAction> attributeEncryptionActions,
             U context,
             Z encryptionConfiguration) throws GeneralSecurityException {
-        if (attributeFlags.isEmpty()) {
+        if (attributeEncryptionActions.isEmpty()) {
             return itemAttributes;
         }
         // Copy to avoid changing anyone elses objects
@@ -263,11 +126,11 @@ public class InternalDynamoDBEncryptor<T,
         internalAttributeValueMap.remove(encryptionConfiguration.getSignatureFieldName());
 
         String associatedData = "TABLE>" + context.getTableName() + "<TABLE";
-        signer.verifySignature(internalAttributeValueMap, attributeFlags, associatedData.getBytes(UTF8),
+        signer.verifySignature(internalAttributeValueMap, attributeEncryptionActions, associatedData.getBytes(UTF8),
                 materials.getVerificationKey(), signature);
         internalAttributeValueMap.remove(encryptionConfiguration.getMaterialDescriptionFieldName());
 
-        actualDecryption(internalAttributeValueMap, attributeFlags, decryptionKey, materialDescription, encryptionConfiguration);
+        actualDecryption(internalAttributeValueMap, attributeEncryptionActions, decryptionKey, materialDescription, encryptionConfiguration);
         return internalAttributeValueTranslator.convertFromInternal(internalAttributeValueMap);
     }
 

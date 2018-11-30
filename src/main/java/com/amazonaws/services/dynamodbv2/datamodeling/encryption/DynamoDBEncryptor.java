@@ -19,10 +19,13 @@ import java.security.GeneralSecurityException;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.AttributeEncryptor;
+import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.AttributeEncryptionAction;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.configuration.DynamoDBEncryptionConfigurationSDK1;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.DescriptionMarshaller;
 import com.amazonaws.services.dynamodbv2.datamodeling.encryption.internal.InternalAttributeValueTranslatorSdk1;
@@ -113,7 +116,10 @@ public class DynamoDBEncryptor {
             throws GeneralSecurityException {
         Map<String, Set<EncryptionFlags>> attributeFlags = allDecryptionFlagsExcept(
                 itemAttributes, doNotDecrypt);
-        return decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+        Map<String, AttributeEncryptionAction> encryptionActionMap = translateToAttributeEncryptionAction(attributeFlags);
+        return decryptRecord(itemAttributes, encryptionConfiguration.toBuilder()
+                .withAttributeEncryptionActionOverrides(encryptionActionMap)
+                .withEncryptionContext(context).build());
     }
 
     /**
@@ -137,6 +143,7 @@ public class DynamoDBEncryptor {
         return allDecryptionFlagsExcept(itemAttributes, Arrays.asList(doNotDecrypt));
     }
 
+    // FIXME check this API again
     /**
      * Returns the decryption flags for all item attributes except for those
      * explicitly specified to be excluded.
@@ -145,15 +152,30 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotDecrypt) {
-        return allDecryptionFlagsExcept(itemAttributes, doNotDecrypt, getEncryptionConfiguration());
+        return allDecryptionFlagsExcept(itemAttributes, getEncryptionConfiguration(), doNotDecrypt);
     }
-
 
     public Map<String, Set<EncryptionFlags>> allDecryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
-            Collection<String> doNotDecrypt, DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) {
-        return internalEncryptor.allDecryptionFlagsExcept(itemAttributes, encryptionConfiguration, doNotDecrypt);
+            DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration,
+            Collection<String> doNotDecrypt) {
+        Map<String, Set<EncryptionFlags>> attributeFlags = new HashMap<String, Set<EncryptionFlags>>();
+
+        for (String fieldName : doNotDecrypt) {
+            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
+        }
+
+        for (String fieldName : itemAttributes.keySet()) {
+            if (!attributeFlags.containsKey(fieldName) &&
+                    !fieldName.equals(encryptionConfiguration.getMaterialDescriptionFieldName()) &&
+                    !fieldName.equals(encryptionConfiguration.getSignatureFieldName())) {
+                attributeFlags.put(fieldName,
+                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
+            }
+        }
+        return attributeFlags;
     }
+
 
     /**
      * Returns an encrypted version of the provided DynamoDb record. All fields are signed. All fields
@@ -201,22 +223,35 @@ public class DynamoDBEncryptor {
     public Map<String, Set<EncryptionFlags>> allEncryptionFlagsExcept(
             Map<String, AttributeValue> itemAttributes,
             Collection<String> doNotEncrypt) {
-        return internalEncryptor.allEncryptionFlagsExcept(itemAttributes, doNotEncrypt);
+        Map<String, Set<EncryptionFlags>> attributeFlags =
+                new HashMap<String, Set<EncryptionFlags>>();
+        for (String fieldName : doNotEncrypt) {
+            attributeFlags.put(fieldName, EnumSet.of(EncryptionFlags.SIGN));
+        }
+
+        for (String fieldName : itemAttributes.keySet()) {
+            if (!attributeFlags.containsKey(fieldName)) {
+                attributeFlags.put(fieldName,
+                        EnumSet.of(EncryptionFlags.ENCRYPT, EncryptionFlags.SIGN));
+            }
+        }
+        return attributeFlags;
     }
+
 
     public Map<String, AttributeValue> decryptRecord(
             Map<String, AttributeValue> itemAttributes,
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context) throws GeneralSecurityException {
-        return decryptRecord(itemAttributes, attributeFlags, context, getEncryptionConfiguration());
+        return decryptRecord(itemAttributes,
+                getEncryptionConfiguration().toBuilder().withAttributeEncryptionActionOverrides(
+                        translateToAttributeEncryptionAction(attributeFlags)).withEncryptionContext(context).build());
     }
 
     public Map<String, AttributeValue> decryptRecord(
-            Map<String, AttributeValue> itemAttributes,
-            Map<String, Set<EncryptionFlags>> attributeFlags,
-            EncryptionContext context,
-            DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) throws GeneralSecurityException {
-        return internalEncryptor.decryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+            Map<String, AttributeValue> itemAttributes, DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration)
+            throws GeneralSecurityException {
+        return internalEncryptor.decryptRecord(itemAttributes, encryptionConfiguration);
     }
 
     /**
@@ -247,7 +282,12 @@ public class DynamoDBEncryptor {
             Map<String, Set<EncryptionFlags>> attributeFlags,
             EncryptionContext context,
             DynamoDBEncryptionConfigurationSDK1 encryptionConfiguration) throws GeneralSecurityException {
-        return internalEncryptor.encryptRecord(itemAttributes, attributeFlags, context, encryptionConfiguration);
+        return internalEncryptor.encryptRecord(itemAttributes,
+                attributeFlags,
+                context,
+                encryptionConfiguration.toBuilder()
+                        .withEncryptionContext(context)
+                        .withAttributeEncryptionActionOverrides());
     }
 
     protected static int getBlockSize(final String encryptionMode) {
@@ -323,5 +363,38 @@ public class DynamoDBEncryptor {
      */
     protected static Map<String, String> unmarshallDescription(AttributeValue attributeValue) {
         return DESCRIPTION_MARSHALLER.unmarshallDescription(attributeValue.getB());
+    }
+
+    // Package private for testing
+    static Map<String, AttributeEncryptionAction> translateToAttributeEncryptionAction(final Map<String, Set<EncryptionFlags>> map) {
+        if (map == null) {
+            return null;
+        }
+        Map<String, AttributeEncryptionAction> encryptionActionMap = new HashMap<>();
+        for (Map.Entry<String, Set<EncryptionFlags>> stringSetEntry : map.entrySet()) {
+            encryptionActionMap.put(stringSetEntry.getKey(), translateToAttributeEncryptionAction(stringSetEntry.getValue()));
+        }
+        return encryptionActionMap;
+    }
+
+    // Package private for testing
+    static AttributeEncryptionAction translateToAttributeEncryptionAction(final Set<EncryptionFlags> encryptionFlags) {
+        if (encryptionFlags == null) {
+            return AttributeEncryptionAction.DO_NOTHING;
+        }
+        if(encryptionFlags.contains(EncryptionFlags.ENCRYPT)) {
+            if(encryptionFlags.contains(EncryptionFlags.SIGN)) {
+                return AttributeEncryptionAction.ENCRYPT_AND_SIGN;
+            }
+            else {
+                return AttributeEncryptionAction.ENCRYPT;
+            }
+        } else {
+            if(encryptionFlags.contains(EncryptionFlags.SIGN)) {
+                return AttributeEncryptionAction.SIGN;
+            } else {
+                return AttributeEncryptionAction.DO_NOTHING;
+            }
+        }
     }
 }

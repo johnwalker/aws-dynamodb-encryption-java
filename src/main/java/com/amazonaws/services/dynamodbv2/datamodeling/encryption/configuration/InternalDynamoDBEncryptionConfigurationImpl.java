@@ -117,6 +117,7 @@ abstract public class InternalDynamoDBEncryptionConfigurationImpl<T, M extends I
         Map<String, AttributeEncryptionAction> attributeEncryptionActionOverrides;
         AttributeEncryptionAction defaultAttributeEncryptionAction;
 
+        // FIXME no shallow copies
         public InternalDynamoDBEncryptionConfigurationBuilderImpl(C configuration) {
             this.descriptionBase = configuration.getDescriptionBase();
             this.signatureFieldName = configuration.getSignatureFieldName();
